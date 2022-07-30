@@ -1,6 +1,6 @@
 {
   "manifest_version": 2,
-  "name": "My Swisscom Dashboard frontend injector",
+  "name": "Angular Mask",
   "version": "0.1",
   "description": "DEV Tool to inject a local version of an Angular Frontend into any test or production environment",
   "icons": {

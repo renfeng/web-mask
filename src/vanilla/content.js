@@ -1,9 +1,9 @@
 chrome.storage.local.get('careEnabled', function (val) {
   if (val && val.careEnabled) {
     console.info('### WARNING ###');
-    console.info('Care Frontend: Injected Local Angular Scripts!');
+    console.info('Injected Local Angular Scripts!');
 
-    fetch('http://localhost:3123/index.html').then((response) => {
+    fetch('http://localhost:4200/index.html').then((response) => {
       response.text().then(function (text) {
         const regex = /<script.*?src="(.*?)".*?>/gim;
         let matches;
@@ -13,7 +13,7 @@ chrome.storage.local.get('careEnabled', function (val) {
           const noModule = script.includes('nomodule');
           if (src.indexOf('sc-shared-header') < 0) {
             console.log('injecting', script);
-            injectScript(src, noModule);
+            injectScript(new URL(src, 'http://localhost:4200').href, noModule);
           }
         }
       });

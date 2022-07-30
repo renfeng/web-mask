@@ -12,7 +12,7 @@ chrome.webRequest.onBeforeRequest.addListener(
     return { cancel: page.angularInjectionEnabled };
   },
   {
-    urls: ['*://*.swisscom.ch/myswisscom/*.js', '*://*.swisscom.com/myswisscom/*.js', '*://*.swissptt.ch/myswisscom/*.js'],
+    urls: ['*://*.swisscom.com/*.js'],
   },
   ['blocking', 'requestBody']
 );
