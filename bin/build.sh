@@ -19,12 +19,12 @@ mkdir -p dist/unpacked
 cp -r "${source}/." dist/unpacked
 
 #js_files=$(perl -nle 'print for /(?<=<script src=")[^"]+(?=" type="module">)/g' <dist/unpacked/index.html)
-js_files=$(find dist/unpacked/ -type f -name "*.js" | sed 's|dist/unpacked/||')
+js_files=$(find dist/unpacked -type f -name "*.js" | sed 's|dist/unpacked/||')
 js_array=$(printf '%s\n' "${js_files[@]}" | jq -R . | jq -s .)
 
 #css_files=$(perl -nle 'print for /(?<=<link href=")[^"]+(?=[?]\w+" rel="stylesheet">)/g' < dist/unpacked/index.html)
 #css_files+=(styles.css)
-css_files=$(find dist/unpacked/ -type f -name "*.css" | sed 's|dist/unpacked/||')
+css_files=$(find dist/unpacked -type f -name "*.css" | sed 's|dist/unpacked/||')
 css_array=$(printf '%s\n' "${css_files[@]}" | jq -R . | jq -s .)
 
 manifest=$(cat src/manifest.json)
