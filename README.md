@@ -16,7 +16,7 @@ Run `bin/build.sh ${path_to_dist} ${domain1} ${domain2}... ${domainN}`
 
 1. Open `chrome://extensions` in your Chrome browser
 2. Enable `Developer mode`
-3. Click `Load unpacked` and point it to `dist/unpacked`
+3. Click `Load unpacked` and point it to `${path_to_dist}`
 4. A grayscale Swisscom icon appears in the upper right corner of Chrome, which indicates the plugin is disable for current tab.
 5. Open a tab with the given domain, the Swisscom logo is now colorful, meaning the plugin is active.
 
