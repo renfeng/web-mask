@@ -10,7 +10,7 @@ This gives us the following possibilities:
 
 ## Build
 
-Run `bin/build.sh ${path_to_dist} ${domain}`
+Run `bin/build.sh ${path_to_dist} ${domain1} ${domain2}... ${domainN}`
 
 ## Install and run
 

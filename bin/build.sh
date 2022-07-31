@@ -5,12 +5,14 @@ set -e
 pushd "$(dirname "$0")/.." >/dev/null
 
 source=${1}
-domain=${2}
+domains=("${@:2}")
 
-domains=("${domain}")
 domain_array=$(printf '%s\n' "${domains[@]}" | jq -R . | jq -s .)
 
-urls=("*://${domain}/*")
+urls=()
+for domain in "${domains[@]}"; do
+  urls+=("*://${domain}/*")
+done
 url_array=$(printf '%s\n' "${urls[@]}" | jq -R . | jq -s .)
 
 rm -rf dist
