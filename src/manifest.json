@@ -1,42 +1,30 @@
 {
-  "manifest_version": 2,
+  "manifest_version": 3,
   "name": "Angular Mask",
-  "version": "0.1",
-  "description": "DEV Tool to inject a local version of an Angular Frontend into any test or production environment",
+  "description": "DEV Tool to inject a local version of an Angular frontend into any test or production environment",
+  "version": "0.2",
   "icons": {
     "16": "icon16.png",
     "48": "icon48.png",
     "128": "icon128.png"
   },
-  "browser_action": {
-    "default_popup": "popup.html",
-    "default_icon": {
-      "16": "icon16.png",
-      "48": "icon48.png",
-      "128": "icon128.png"
-    }
-  },
-  "permissions": [
-    "storage",
-    "activeTab",
-    "webRequest",
-    "webRequestBlocking",
-    "*://*.swisscom.ch/*",
-    "*://*.swisscom.com/*",
-    "*://*.swissptt.ch/*",
-    "*://*.bluewin.ch/*",
-    "*://rcp.scsstatic.ch/*",
-    "*://sdx.scsstatic.ch/*"
-  ],
-  "background": {
-    "scripts": ["background.js"]
-  },
   "content_scripts": [
     {
-      "matches": ["*://*.swisscom.com/*", "*://*.swisscom.ch/*", "*://*.swissptt.ch/*"],
-      "js": ["content.js"],
-      "run_at": "document_end",
+      "matches": [],
+      "js": [],
+      "css": [],
       "all_frames": true
     }
-  ]
+  ],
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "ruleset_1",
+        "enabled": true,
+        "path": "rules.json"
+      }
+    ]
+  },
+  "permissions": ["declarativeNetRequestWithHostAccess"],
+  "host_permissions": []
 }
