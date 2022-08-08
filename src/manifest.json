@@ -16,6 +16,12 @@
       "all_frames": true
     }
   ],
+  "web_accessible_resources": [
+    {
+      "matches": [],
+      "resources": ["*"]
+    }
+  ],
   "declarative_net_request": {
     "rule_resources": [
       {
