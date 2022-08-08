@@ -25,6 +25,5 @@
       }
     ]
   },
-  "permissions": ["declarativeNetRequestWithHostAccess"],
-  "host_permissions": []
+  "permissions": ["declarativeNetRequest"]
 }

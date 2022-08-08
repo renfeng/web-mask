@@ -29,7 +29,6 @@ manifest=$(echo "${manifest}" | jq '.name'="\"Angular Mask for $(basename "${tar
 manifest=$(echo "${manifest}" | jq '.content_scripts[0].matches'="${url_array}")
 manifest=$(echo "${manifest}" | jq '.content_scripts[0].js'="${js_array}")
 manifest=$(echo "${manifest}" | jq '.content_scripts[0].css'="${css_array}")
-manifest=$(echo "${manifest}" | jq '.host_permissions'="${url_array}")
 echo "${manifest}" >"${target}/manifest.json"
 
 rules=$(cat src/rules.json)

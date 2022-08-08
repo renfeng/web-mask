@@ -42,7 +42,6 @@ const urls = domains.map((domain) => `*://${domain}/*`);
   manifest.content_scripts[0].matches = urls;
   manifest.content_scripts[0].js = jsFiles;
   manifest.content_scripts[0].css = cssFiles;
-  manifest.host_permissions = urls;
   writeFileSync(`${target}/manifest.json`, JSON.stringify(manifest, null, 2));
 
   const rules = JSON.parse(readFileSync('src/rules.json', 'utf8'));
