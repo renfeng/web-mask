@@ -7,7 +7,7 @@
     },
     "condition": {
       "domains": [],
-      "resourceTypes": ["script", "stylesheet", "image"]
+      "resourceTypes": ["script", "stylesheet", "image", "font"]
     }
   }
 ]
