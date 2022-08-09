@@ -13,7 +13,7 @@ const domains = args.slice(1);
 const urls = domains.map((domain) => `*://${domain}/*`);
 
 const index = readFileSync(`${target}/index.html`, 'utf8');
-const jsFiles = index.match(/(?<=<script src=")[^"]+(?=" type="module">)/g);
+const jsFiles = index.match(/(?<=<script src=")[^"]+(?=" (type="module">|defer))/g);
 const cssFiles = index.match(/(?<=<link rel="stylesheet" href=")[^"]+(?=">)/g);
 
 const manifest = JSON.parse(readFileSync('src/manifest.json', 'utf8'));
