@@ -12,31 +12,28 @@ cssFiles.forEach((cssFile) => {
   const css = readFileSync(cssFile, 'utf8');
 
   const filtered = [
-    ...(css.match(new RegExp(`(?<=url[(]")(?!data:image/)[^"]+(?="[)])`, 'g')) || []).map((url) => ({ url, quote: '"' })),
-    ...(css.match(new RegExp(`(?<=url[(]')(?!data:image/)[^']+(?='[)])`, 'g')) || []).map((url) => ({ url, quote: "'" })),
-    ...(css.match(new RegExp(`(?<=url[(])(?!['"]|data:image/)(?:\\\\[)]|[^)])+(?=[)])`, 'g')) || []).map((url) => ({ url, quote: '' })),
+    ...(css.match(new RegExp(`(?<=url[(]")[^"]+(?="[)])`, 'g')) || []).map((url) => ({ url, quote: '"' })),
+    ...(css.match(new RegExp(`(?<=url[(]')[^']+(?='[)])`, 'g')) || []).map((url) => ({ url, quote: "'" })),
+    ...(css.match(new RegExp(`(?<=url[(])(?!['"])(?:\\\\[)]|[^)])+(?=[)])`, 'g')) || []).map((url) => ({ url, quote: '' })),
   ]
     .map(({ url, quote }) => ({ url, quote, replacement: buildReplacement(url, path) }))
-    .map(({ url, replacement, quote }) => {
+    .filter(({ replacement }) => replacement !== null)
+    .reduce((result, { url, replacement, quote }) => {
       console.log();
-      console.log(url);
-      console.log(replacement);
-      return { url, replacement, quote };
-    })
-    .reduce(
-      (result, { url, replacement, quote }) =>
-        !replacement ? result : result.replace(`(${quote}${url}${quote})`, `(${quote}${replacement}${quote})`),
-      css
-    );
+      console.log(`(${quote}${url}${quote})`);
+      console.log(`(${quote}${replacement}${quote})`);
+      return result.replace(`(${quote}${url}${quote})`, `(${quote}${replacement}${quote})`);
+    }, css);
 
   writeFileSync(cssFile, filtered);
 });
 
 function buildReplacement(url, path) {
   try {
+    // bypasses data, blob, http, and https urls
     new URL(url);
     return null;
   } catch (error) {
-    return new URL(url.startsWith('/') ? url : `${path}/${url}`, 'chrome-extension://__MSG_@@extension_id__/').href;
+    return `chrome-extension://__MSG_@@extension_id__${url.startsWith('/') ? url : `${path}/${url}`}`;
   }
 }
