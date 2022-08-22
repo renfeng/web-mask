@@ -25,7 +25,9 @@ css_files=()
 while read -r css_file; do
   css_files+=("${css_file}")
 done <<<"$(grep -rl "url[(]" "${target}"/* --include "*.css")"
-node "${basedir}/bin/css.js" "${target}" "${css_files[@]}"
+if [ -n "${css_files[*]}" ]; then
+  node "${basedir}/bin/css.js" "${target}" "${css_files[@]}"
+fi
 
 cp -r "${basedir}/src/vanilla/." "${target}"
 
