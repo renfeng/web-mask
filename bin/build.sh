@@ -2,7 +2,7 @@
 
 set -e
 
-cd "$(dirname "$0")/.."
+basedir="$(dirname "$0")/.."
 
 target=${1%/}
 
@@ -13,24 +13,30 @@ js_array=$(printf '%s\n' "${js_files[@]}" | jq -R . | jq -s .)
 css_files=$(find "${target}" -type f -name "*.css" | sed "s|${target}/||")
 css_array=$(printf '%s\n' "${css_files[@]}" | jq -R . | jq -s .)
 
-manifest=$(cat src/manifest.json)
+manifest=$(cat "${basedir}/src/manifest.json")
 manifest=$(echo "${manifest}" | jq '.content_scripts[0].js'="${js_array}")
 manifest=$(echo "${manifest}" | jq '.content_scripts[0].css'="${css_array}")
 echo "${manifest}" >"${target}/manifest.json"
-cp src/rules.json "${target}"
+cp "${basedir}/src/rules.json" "${target}"
 
-if (command -v cygpath >/dev/null); then
-  target="$(cygpath -w "${target}")"
-fi
-
-bin/meta.js "${target}" "${@:2}"
+node "${basedir}/bin/meta.js" "${target}" "${@:2}"
 
 css_files=()
 while read -r css_file; do
   css_files+=("${css_file}")
 done <<<"$(grep -rl "url[(]" "${target}"/* --include "*.css")"
-bin/css.js "${target}" "${css_files[@]}"
+node "${basedir}/bin/css.js" "${target}" "${css_files[@]}"
 
-cp -r src/vanilla/. "${target}"
+cp -r "${basedir}/src/vanilla/." "${target}"
 
-bin/version.sh >"${target}/angular-mask-version.txt"
+"${basedir}/bin/version.sh" >"${target}/angular-mask-version.txt"
+
+echo
+echo "Open in Chrome, chrome://extensions"
+echo "Load unpacked"
+echo "Copy and paste the following path"
+if (command -v cygpath >/dev/null); then
+  cygpath -w "$(realpath "${target}")"
+else
+  realpath "${target}"
+fi

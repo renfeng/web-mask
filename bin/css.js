@@ -8,7 +8,10 @@ const target = args[0];
 const cssFiles = args.slice(1);
 
 cssFiles.forEach((cssFile) => {
-  const path = dirname(cssFile.substring(target.length));
+  console.log();
+  console.log(`Processing css file: ${cssFile.substring(target.length)}`);
+
+  const path = dirname(cssFile).substring(target.length);
   const css = readFileSync(cssFile, 'utf8');
 
   const filtered = [
