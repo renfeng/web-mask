@@ -3,11 +3,36 @@
     "id": 1,
     "priority": 1,
     "action": {
-      "type": "block"
+      "type": "redirect",
+      "redirect": {
+        "transform": {
+          "scheme": "http",
+          "host": "localhost",
+          "port": ""
+        }
+      }
     },
     "condition": {
       "domains": [],
       "resourceTypes": ["script", "stylesheet", "image", "font"]
+    }
+  },
+  {
+    "id": 2,
+    "priority": 1,
+    "action": {
+      "type": "redirect",
+      "redirect": {
+        "transform": {
+          "scheme": "http",
+          "host": "localhost",
+          "port": ""
+        }
+      }
+    },
+    "condition": {
+      "domains": [],
+      "resourceTypes": ["websocket"]
     }
   }
 ]

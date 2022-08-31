@@ -1,42 +1,23 @@
-#!/usr/bin/env node
-
-const { basename } = require('path');
 const { readFileSync, writeFileSync } = require('fs');
 
 const args = process.argv.slice(2);
-const target = args[0];
-const domains = args.slice(1);
+const name = args[0];
+const port = args[1];
+const target = args[2];
+const domains = args.slice(3);
 
 const urls = domains.map((domain) => `*://${domain}/*`);
 
-const index = readFileSync(`${target}/index.html`, 'utf8');
-const jsNonModuleFiles = index.match(/(?<=<script src=")[^"]+(?=" nomodule defer>)/g);
-const jsFiles = index.match(/(?<=src=")[^"]+(?=")/g);
-const cssFiles = index
-  .match(/(?<=<link rel="stylesheet" href=")[^"]+(?=">)|(?<=<link href=")[^"]+(?=" rel="stylesheet">)/g)
-  .map((css) => css.replace(/[?].*/, ''));
-
 const manifest = JSON.parse(readFileSync(`${target}/manifest.json`, 'utf8'));
-manifest.name = `Angular Mask for ${basename(target)}`;
-manifest.content_scripts[0].matches = urls;
-manifest.content_scripts[0].js = [
-  ...jsFiles.filter((js) => !jsNonModuleFiles?.includes(js) && isRelative(js)),
-  ...manifest.content_scripts[0].js.filter((js) => !jsFiles.includes(js) && js !== 'content.js'),
-  'content.js',
-];
-manifest.content_scripts[0].css = [...cssFiles, ...manifest.content_scripts[0].css.filter((css) => !cssFiles.includes(css))];
-manifest.web_accessible_resources[0].matches = urls;
+manifest.name = `Angular Mask for ${name}`;
+manifest.content_scripts.forEach((script) => (script.matches = urls));
+manifest.web_accessible_resources.forEach((resource) => (resource.matches = urls));
+manifest.host_permissions = urls;
 writeFileSync(`${target}/manifest.json`, JSON.stringify(manifest, null, 2));
 
 const rules = JSON.parse(readFileSync(`${target}/rules.json`, 'utf8'));
-rules[0].condition.domains = domains;
+rules.forEach((rule) => {
+  rule.condition.domains = domains;
+  rule.action.redirect.transform.port = `${port}`;
+});
 writeFileSync(`${target}/rules.json`, JSON.stringify(rules, null, 2));
-
-function isRelative(url) {
-  try {
-    new URL(url);
-    return false;
-  } catch (error) {
-    return true;
-  }
-}
