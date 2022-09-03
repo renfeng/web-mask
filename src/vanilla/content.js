@@ -18,7 +18,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 });
 
-chrome.runtime.sendMessage({ action: 'fetch', src: location.pathname, next: 'html' }, callback);
+chrome.runtime.sendMessage({ action: 'fetch', src: location.pathname, accept: 'text/html', next: 'html' }, callback);
 
 const script = document.createElement('script');
 script.setAttribute('type', 'text/javascript');

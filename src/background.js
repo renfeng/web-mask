@@ -6,8 +6,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   try {
     if (message.action === 'fetch') {
       const url = new URL(message.src, 'http://localhost:PORT');
-      fetch(url)
-        .then((response) => response.text())
+      fetch(url, { headers: { Accept: message.accept || '*/*' } })
+        .then((response) => {
+          if (response.status >= 400) {
+            throw new Error(response.statusText);
+          }
+          return response.text();
+        })
         .then((content) => {
           chrome.tabs.sendMessage(tabId, { action: message.next, content }, (response) => {
             console.debug('response received', response);
