@@ -34,8 +34,8 @@ function callback(response) {
 }
 
 function filterHTML(html) {
-  filterHead(html.match(/<head>.*<[/]head>/s)[0]);
-  filterBody(html.match(/<body>.*<[/]body>/s)[0]);
+  filterHead(html.match(/<head\b.*<[/]head>/s)[0]);
+  filterBody(html.match(/<body\b.*<[/]body>/s)[0]);
 }
 
 function filterHead(head) {
