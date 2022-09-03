@@ -27,9 +27,10 @@ node "${basedir}/bin/meta.js" "${name}" "${port}" "${target}" "${@}"
 "${basedir}/bin/version.sh" >"${target}/angular-mask-version.txt"
 
 echo
-echo "Open in Chrome, chrome://extensions"
-echo "Load unpacked"
-echo "Copy and paste the following path"
+echo 'Open in Chrome, chrome://extensions'
+echo 'Enable "Developer mode"'
+echo 'Load unpacked'
+echo 'Copy and paste the following path'
 if (command -v cygpath >/dev/null); then
   cygpath -w "$(realpath "${target}")"
 else
