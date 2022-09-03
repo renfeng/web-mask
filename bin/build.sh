@@ -10,14 +10,15 @@ file=angular.json
 while [ ! -e ${file} ]; do
   file=../${file}
 done
-port=$(jq '.projects["'"${name}"'"].architect.serve.options.port // 4200' <${file})
+port=$(jq -r '.projects["'"${name}"'"].architect.serve.options.port // 4200' <${file})
+baseHref=$(jq -r '.projects["'"${name}"'"].architect.build.options.baseHref // "/"' <${file})
 
 rm -rf "${target}"
 mkdir -p "${target}"
 
 cp -r "${basedir}/src/vanilla/." "${target}"
 
-sed "s/\bPORT\b/${port}/g" "${basedir}/src/background.js" >"${target}/background.js"
+sed "s~<PORT>~${port}~g;s~<BASE>~${baseHref}~g" "${basedir}/src/background.js" >"${target}/background.js"
 
 cp "${basedir}/src/manifest.json" "${target}"
 cp "${basedir}/src/rules.json" "${target}"

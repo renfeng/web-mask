@@ -5,7 +5,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   } = sender;
   try {
     if (message.action === 'fetch') {
-      const url = new URL(message.src, 'http://localhost:PORT');
+      const url = new URL(message.src, 'http://localhost:<PORT><BASE>');
       fetch(url, { headers: { Accept: message.accept || '*/*' } })
         .then((response) => {
           if (response.status >= 400) {
