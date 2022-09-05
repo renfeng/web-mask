@@ -24,3 +24,9 @@ ${base}/bin/build.sh
 ## Uninstall or disable
 
 When done you can uninstall the plugin, or disable it under `chrome://extensions`
+
+## Troubleshooting: redirect doesn't work
+
+Enable the option, DevTools >> Application >> Service Workers >> Bypass for network
+
+Ref. https://crbug.com/1012977
