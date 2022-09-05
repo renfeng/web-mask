@@ -18,20 +18,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 });
 
-chrome.runtime.sendMessage({ action: 'fetch', src: location.pathname, accept: 'text/html', next: 'html' }, callback);
-
-const script = document.createElement('script');
-script.setAttribute('type', 'text/javascript');
-script.setAttribute('src', chrome.runtime.getURL('page.js'));
-document.head.appendChild(script);
-
-function callback(response) {
+chrome.runtime.sendMessage({ action: 'fetch', src: location.pathname, accept: 'text/html', next: 'html' }, (response) => {
   if (response) {
     console.debug('response received', response);
+    const script = document.createElement('script');
+    script.setAttribute('type', 'text/javascript');
+    script.setAttribute('src', chrome.runtime.getURL('page.js'));
+    document.head.appendChild(script);
   } else if (chrome.runtime.lastError) {
     console.error('error occurred', chrome.runtime.lastError);
   }
-}
+});
 
 function filterHTML(html) {
   filterHead(html.match(/<head\b.*<[/]head>/s)[0]);
@@ -81,6 +78,14 @@ function filterBody(body) {
       chrome.runtime.sendMessage({ action: 'fetch', src, next: 'javascript' }, callback);
     }
   });
+}
+
+function callback(response) {
+  if (response) {
+    console.debug('response received', response);
+  } else if (chrome.runtime.lastError) {
+    console.error('error occurred', chrome.runtime.lastError);
+  }
 }
 
 function injectJavascript(javascript) {

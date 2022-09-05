@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Angular Mask</title>
+    <style>
+      label {
+        white-space: nowrap;
+      }
+      p {
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <dl>
+      <dt>Context path</dt>
+      <dd id="default-path">
+        <label>
+          <input name="path" type="radio" value="/" checked />
+          <span>/</span>
+        </label>
+      </dd>
+    </dl>
+    <label>
+      <span>Local port</span>
+      <input id="port" value="4200" />
+    </label>
+    <p>
+      <button id="toggle">Enable</button>
+    </p>
+    <script src="popup.js"></script>
+  </body>
+</html>

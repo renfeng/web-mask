@@ -2,18 +2,21 @@
   "manifest_version": 3,
   "name": "Angular Mask",
   "description": "DEV Tool to inject a local version of an Angular frontend into any test or production environment",
-  "version": "0.3",
+  "version": "0.4",
   "icons": {
     "16": "icon16.png",
     "48": "icon48.png",
     "128": "icon128.png"
+  },
+  "action": {
+    "default_popup": "popup.html"
   },
   "background": {
     "service_worker": "background.js"
   },
   "content_scripts": [
     {
-      "matches": [],
+      "matches": ["*://*/*"],
       "js": ["content.js"],
       "css": [],
       "all_frames": true
@@ -21,19 +24,10 @@
   ],
   "web_accessible_resources": [
     {
-      "matches": [],
+      "matches": ["*://*/*"],
       "resources": ["page.js"]
     }
   ],
-  "declarative_net_request": {
-    "rule_resources": [
-      {
-        "id": "ruleset_1",
-        "enabled": true,
-        "path": "rules.json"
-      }
-    ]
-  },
-  "permissions": ["declarativeNetRequestWithHostAccess"],
-  "host_permissions": []
+  "optional_permissions": ["declarativeNetRequestWithHostAccess", "storage"],
+  "host_permissions": ["https://*/"]
 }
