@@ -5,9 +5,16 @@ set -e
 basedir="$(dirname "$0")/.."
 target="${basedir}/dist/public"
 
+rm -rf "${target}"
+mkdir -p "${target}"
+
 cp -r "${basedir}/src/vanilla/." "${target}"
 
 "${basedir}/bin/version.sh" >"${target}/version.txt"
+
+pushd >/dev/null "${target}"
+zip -FSr ../angular-mask.zip .
+popd >/dev/null
 
 echo
 echo 'Open in Chrome, chrome://extensions'

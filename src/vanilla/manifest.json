@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Angular Mask",
-  "description": "DEV Tool to inject a local version of an Angular frontend into any test or production environment",
+  "description": "Dev tool to inject a local version of Angular frontend into any server environment",
   "version": "0.4",
   "icons": {
     "16": "icon16.png",
