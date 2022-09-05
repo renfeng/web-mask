@@ -9,6 +9,10 @@ get((data) => {
     const { tabId } = activeInfo;
     toggleIcon(tabId);
   });
+  chrome.tabs.onRemoved.addListener((tabId) => {
+    delete registeredTabs[tabId];
+    set({ registeredTabs });
+  });
 
   function onMessage(message, sender, sendResponse) {
     console.log(`message received: ${JSON.stringify(message, null, 2)}, ${JSON.stringify(sender)}`);
