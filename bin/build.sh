@@ -13,7 +13,7 @@ cp -r "${basedir}/src/vanilla/." "${target}"
 "${basedir}/bin/version.sh" >"${target}/version.txt"
 
 pushd >/dev/null "${target}"
-zip -FSr ../angular-mask.zip .
+zip -FSrq "../$(basename "${basedir}").zip" .
 popd >/dev/null
 
 echo
