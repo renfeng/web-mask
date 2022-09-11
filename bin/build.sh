@@ -4,6 +4,7 @@ set -e
 
 basedir="$(dirname "$0")/.."
 target="${basedir}/dist/public"
+name=$(basename "$(realpath "${basedir}")")
 
 rm -rf "${target}"
 mkdir -p "${target}"
@@ -13,7 +14,7 @@ cp -r "${basedir}/src/vanilla/." "${target}"
 "${basedir}/bin/version.sh" >"${target}/version.txt"
 
 pushd >/dev/null "${target}"
-zip -FSrq "../$(basename "${basedir}").zip" .
+zip -FSrq "../${name}.zip" .
 popd >/dev/null
 
 echo
