@@ -14,13 +14,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       sendResponse('not implemented');
     }
   } catch (error) {
-    sendResponse(`error: ${error}`);
+    const { message, stack } = error;
+    sendResponse({ error: { message, stack } });
   }
 });
 
-chrome.runtime.sendMessage({ action: 'fetch', src: location.pathname, accept: 'text/html', next: 'html' }, (response) => {
+chrome.runtime.sendMessage({ action: 'fetch', src: location.pathname, accept: 'text/html', replyTo: 'html' }, (response) => {
   if (response) {
-    console.debug('response received', response);
+    console.debug('response received', JSON.stringify(response, null, 2));
     const script = document.createElement('script');
     script.setAttribute('type', 'text/javascript');
     script.setAttribute('src', chrome.runtime.getURL('page.js'));
@@ -75,14 +76,14 @@ function filterBody(body) {
       element.type = 'module';
       document.body.appendChild(element);
     } else {
-      chrome.runtime.sendMessage({ action: 'fetch', src, next: 'javascript' }, callback);
+      chrome.runtime.sendMessage({ action: 'fetch', src, replyTo: 'javascript' }, callback);
     }
   });
 }
 
 function callback(response) {
   if (response) {
-    console.debug('response received', response);
+    console.debug('response received', JSON.stringify(response, null, 2));
   } else if (chrome.runtime.lastError) {
     console.error('error occurred', chrome.runtime.lastError);
   }

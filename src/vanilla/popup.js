@@ -6,8 +6,12 @@ chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
     const path = Array.from(document.querySelectorAll('input[name=path]')).find((input) => input.checked).value;
     chrome.runtime.sendMessage({ action, port, path, tab }, (response) => {
       if (response) {
-        console.debug('response received', response);
-        location.reload();
+        console.debug('response received', JSON.stringify(response, null, 2));
+        if (response.error) {
+          alert(response.error.message);
+        } else {
+          location.reload();
+        }
       } else if (chrome.runtime.lastError) {
         console.error('error occurred', chrome.runtime.lastError);
       }
@@ -16,7 +20,7 @@ chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
 
   chrome.runtime.sendMessage({ action: 'ping', tab }, (response) => {
     if (response) {
-      console.debug('response received', response);
+      console.debug('response received', JSON.stringify(response, null, 2));
       const { enabled, path } = response;
       toggleButton.innerText = enabled ? 'Disable' : 'Enable';
 
@@ -36,10 +40,11 @@ chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
             if (component === '') {
               return current;
             }
-            const next = `${current}${component}/`;
             const deep = true;
             const clone = defaultPath.cloneNode(deep);
             clone.removeAttribute('id');
+
+            const next = `${current}${component}/`;
             if (next === path) {
               clone.querySelector('input').setAttribute('checked', 'checked');
             } else {

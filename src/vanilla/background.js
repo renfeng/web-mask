@@ -1,6 +1,3 @@
-const httpRedirectRuleId = 1;
-const websocketRedirectRuleId = 2;
-
 get((data) => {
   let { registeredTabs } = data;
 
@@ -22,42 +19,32 @@ get((data) => {
     try {
       if (action === 'fetch') {
         if (isRegistered(tabId) && isEnabled(tabId)) {
-          const { src, accept, next } = message;
-          const { port, path } = registeredTabs[tabId];
-          const url = new URL(src, `http://localhost:${port}${path}`);
-          fetch(url, { headers: { Accept: accept || '*/*' } })
-            .then((response) => {
-              if (response.status >= 400) {
-                throw new Error(response.statusText);
-              }
-              return response.text();
-            })
-            .then((content) => {
-              chrome.tabs.sendMessage(tabId, { action: next, content }, (response) => {
-                console.debug('response received', response);
-              });
-            })
-            .catch((error) => {
-              chrome.tabs.sendMessage(tabId, { action: 'error', content: `${error.message} ${url}` }, (response) => {
-                console.debug('response received', response);
-              });
-            });
+          fetchAsync(tabId, message);
         }
         sendResponse('success');
       } else if (action === 'ping') {
-        sendResponse(registeredTabs[tabId] || { enabled: false });
+        if (isRegistered(tabId)) {
+          sendResponse(registeredTabs[tabId]);
+        } else {
+          sendResponse({ enabled: false });
+        }
       } else if (action === 'enable') {
         const { port, path } = message;
-        enable(tab, port, path);
+        enable(tab, port, path, () => {
+          chrome.tabs.reload(tabId);
+        });
         sendResponse('success');
       } else if (action === 'disable') {
-        disable(tabId);
+        disable(tabId, () => {
+          chrome.tabs.reload(tabId);
+        });
         sendResponse('success');
       } else {
         sendResponse('not implemented');
       }
     } catch (error) {
-      sendResponse(`error: ${error}`);
+      const { message, stack } = error;
+      sendResponse({ error: { message, stack } });
     }
   }
 
@@ -71,6 +58,30 @@ get((data) => {
     }
   }
 
+  function fetchAsync(tabId, message) {
+    const { src, accept, replyTo } = message;
+    const { port, path } = registeredTabs[tabId];
+    const url = new URL(src, `http://localhost:${port}${path}`);
+    fetch(url, { headers: { Accept: accept || '*/*' } })
+      .then((response) => {
+        if (response.status >= 400) {
+          throw new Error(response.statusText);
+        }
+        return response.text();
+      })
+      .then((content) => {
+        chrome.tabs.sendMessage(tabId, { action: replyTo, content }, (response) => {
+          console.debug('response received', JSON.stringify(response, null, 2));
+        });
+      })
+      .catch((error) => {
+        chrome.tabs.sendMessage(tabId, { action: 'error', content: `${error.message} ${url}` }, (response) => {
+          console.debug('response received', JSON.stringify(response, null, 2));
+        });
+        disable(tabId);
+      });
+  }
+
   function isRegistered(tabId) {
     return registeredTabs?.hasOwnProperty(tabId);
   }
@@ -79,14 +90,14 @@ get((data) => {
     return registeredTabs[tabId]?.enabled;
   }
 
-  function enable(tab, port, path) {
+  function enable(tab, port, path, callback) {
     const { id: tabId, url } = tab;
     const domain = new URL(url).host;
     chrome.declarativeNetRequest.updateSessionRules(
       {
         addRules: [
           {
-            id: httpRedirectRuleId,
+            id: tabId,
             action: {
               type: 'redirect',
               redirect: {
@@ -103,24 +114,6 @@ get((data) => {
               tabIds: [tabId],
             },
           },
-          {
-            id: websocketRedirectRuleId,
-            action: {
-              type: 'redirect',
-              redirect: {
-                transform: {
-                  scheme: 'http',
-                  host: 'localhost',
-                  port: `${port}`,
-                },
-              },
-            },
-            condition: {
-              initiatorDomains: [domain],
-              resourceTypes: ['websocket'],
-              tabIds: [tabId],
-            },
-          },
         ],
       },
       () => {
@@ -132,15 +125,15 @@ get((data) => {
 
         toggleIcon(tabId);
 
-        chrome.tabs.reload(tabId);
+        callback && callback();
       }
     );
   }
 
-  function disable(tabId) {
+  function disable(tabId, callback) {
     chrome.declarativeNetRequest.updateSessionRules(
       {
-        removeRuleIds: [httpRedirectRuleId, websocketRedirectRuleId],
+        removeRuleIds: [tabId],
       },
       () => {
         console.log(`disabling tab: ${tabId}`);
@@ -151,7 +144,7 @@ get((data) => {
 
         toggleIcon(tabId);
 
-        chrome.tabs.reload(tabId);
+        callback && callback();
       }
     );
   }
