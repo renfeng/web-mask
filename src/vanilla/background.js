@@ -30,14 +30,10 @@ get((data) => {
         }
       } else if (action === 'enable') {
         const { port, path } = message;
-        enable(tab, port, path, () => {
-          chrome.tabs.reload(tabId);
-        });
+        enable(tab, port, path);
         sendResponse('success');
       } else if (action === 'disable') {
-        disable(tabId, () => {
-          chrome.tabs.reload(tabId);
-        });
+        disable(tabId);
         sendResponse('success');
       } else {
         sendResponse('not implemented');
@@ -78,7 +74,6 @@ get((data) => {
         chrome.tabs.sendMessage(tabId, { action: 'error', content: `${error.message} ${url}` }, (response) => {
           console.debug('response received', JSON.stringify(response, null, 2));
         });
-        disable(tabId);
       });
   }
 
@@ -90,7 +85,7 @@ get((data) => {
     return registeredTabs[tabId]?.enabled;
   }
 
-  function enable(tab, port, path, callback) {
+  function enable(tab, port, path) {
     const { id: tabId, url } = tab;
     const domain = new URL(url).host;
     chrome.declarativeNetRequest.updateSessionRules(
@@ -125,12 +120,12 @@ get((data) => {
 
         toggleIcon(tabId);
 
-        callback && callback();
+        chrome.tabs.reload(tabId);
       }
     );
   }
 
-  function disable(tabId, callback) {
+  function disable(tabId) {
     chrome.declarativeNetRequest.updateSessionRules(
       {
         removeRuleIds: [tabId],
@@ -144,7 +139,7 @@ get((data) => {
 
         toggleIcon(tabId);
 
-        callback && callback();
+        chrome.tabs.reload(tabId);
       }
     );
   }
