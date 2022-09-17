@@ -6,7 +6,7 @@ The Angular Mask Chrome Extension allows you to inject a local build of an Angul
 
 This gives us the following possibilities:
 
-- testing of local changes on servers while these environments are reserved for other releases
+- Testing of local changes on servers while the servers are reserved for major release
 - Hotfix testing directly on server environment with actual data
 - Feature branch integration testing before creating a pull request
 
@@ -48,5 +48,3 @@ Redirect HTTP requests for javascript, css, image, ... files to local frontend d
 ## Are you using remote code?
 
 No, I am not using remote code
-
-[Barcode Icon](https://iconscout.com/icons/barcode) by [EcommDesign](https://iconscout.com/contributors/ecommdesign)
