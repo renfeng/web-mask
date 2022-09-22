@@ -38,7 +38,7 @@ function filterHTML(html) {
 
 function filterHead(head) {
   document.head.querySelectorAll('link[href]').forEach((node) => node.remove());
-  head.match(/<link\b.*?>/g).forEach((link) => {
+  head.match(/<link\b.*?>/g)?.forEach((link) => {
     const href = link.match(/(?<=href=")(?<href>[^"]+)(?=")/)?.groups['href'];
     if (!href) {
       return;
@@ -63,7 +63,7 @@ function filterHead(head) {
 
 function filterBody(body) {
   document.body.querySelectorAll('script[src]').forEach((node) => node.remove());
-  body.match(/<script\b.*?><\/script>/g).forEach((script) => {
+  body.match(/<script\b.*?><\/script>/g)?.forEach((script) => {
     const src = script.match(/(?<=src=")(?<src>[^"]+)(?=")/)?.groups['src'];
     if (!src) {
       return;
