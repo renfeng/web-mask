@@ -104,7 +104,7 @@ get((data) => {
               },
             },
             condition: {
-              initiatorDomains: [domain],
+              requestDomains: [domain],
               resourceTypes: ['script', 'stylesheet', 'image', 'font'],
               tabIds: [tabId],
             },
