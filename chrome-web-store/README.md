@@ -4,11 +4,15 @@
 
 The Angular Mask Chrome Extension allows you to inject a local build of an Angular Frontend into any server environment.
 
-This gives us the following possibilities:
+This gives you the following possibilities:
 
 - Testing of local changes on servers while the servers are reserved for major release
 - Hotfix testing directly on server environment with actual data
 - Feature branch integration testing before creating a pull request
+
+It's similar to "Resource Override", but requires minimum configuration and is built for Manifest V3. See
+* https://chrome.google.com/webstore/detail/resource-override/pkoacgokdfckfpndoffpifphamojphii
+* https://developer.chrome.com/docs/extensions/mv3/mv2-sunset/
 
 ## Category
 
