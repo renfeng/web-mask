@@ -47,10 +47,10 @@ get((data) => {
   function toggleIcon(tabId) {
     if (isRegistered(tabId) && isEnabled(tabId)) {
       // known issue: affects other windows
-      chrome.action.setIcon({ path: 'icon128.png' }, tabId);
+      chrome.action.setIcon({ path: 'icon128.png', tabId });
     } else {
       // known issue: affects other windows
-      chrome.action.setIcon({ path: 'disabled-icon128.png' }, tabId);
+      chrome.action.setIcon({ path: 'disabled-icon128.png', tabId });
     }
   }
 

@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Angular Mask",
-  "description": "Dev tool to inject a local version of Angular frontend into any server environment",
-  "version": "0.9",
+  "description": "It overrides resources, JS, CSS, Image, and fonts, of a website with the copies from a local dev server.",
+  "version": "0.10",
   "icons": {
     "16": "icon16.png",
     "48": "icon48.png",
