@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Angular Mask",
-  "description": "It overrides resources, JS, CSS, Image, and fonts, of a website with the copies from a local dev server.",
-  "version": "0.10",
+  "name": "Web Mask",
+  "description": "It overrides resources, JS, CSS, Image, and fonts, of a website with the copies from a local web server.",
+  "version": "1.1",
   "icons": {
     "16": "icon16.png",
     "48": "icon48.png",
@@ -14,20 +14,11 @@
   "background": {
     "service_worker": "background.js"
   },
-  "content_scripts": [
-    {
-      "matches": ["*://*/*"],
-      "js": ["content.js"],
-      "css": [],
-      "all_frames": true
-    }
-  ],
   "web_accessible_resources": [
     {
       "matches": ["*://*/*"],
       "resources": ["page.js"]
     }
   ],
-  "permissions": ["declarativeNetRequestWithHostAccess", "storage"],
-  "host_permissions": ["https://*/"]
+  "permissions": ["declarativeNetRequestWithHostAccess", "storage", "activeTab", "scripting"]
 }

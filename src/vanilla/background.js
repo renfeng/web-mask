@@ -17,12 +17,7 @@ get((data) => {
     const { id: tabId } = tab;
     const { action } = message;
     try {
-      if (action === 'fetch') {
-        if (isRegistered(tabId) && isEnabled(tabId)) {
-          fetchAsync(tabId, message);
-        }
-        sendResponse('success');
-      } else if (action === 'ping') {
+      if (action === 'ping') {
         if (isRegistered(tabId)) {
           sendResponse(registeredTabs[tabId]);
         } else {
@@ -46,16 +41,13 @@ get((data) => {
 
   function toggleIcon(tabId) {
     if (isRegistered(tabId) && isEnabled(tabId)) {
-      // known issue: affects other windows
       chrome.action.setIcon({ path: 'icon128.png', tabId });
     } else {
-      // known issue: affects other windows
       chrome.action.setIcon({ path: 'disabled-icon128.png', tabId });
     }
   }
 
-  function fetchAsync(tabId, message) {
-    const { src, accept, replyTo } = message;
+  function fetchAsync(tabId, { src, accept, replyTo }) {
     const { port, path } = registeredTabs[tabId];
     const url = new URL(src, `http://localhost:${port}${path}`);
     fetch(url, { headers: { Accept: accept || '*/*' } })
@@ -65,15 +57,10 @@ get((data) => {
         }
         return response.text();
       })
-      .then((content) => {
-        chrome.tabs.sendMessage(tabId, { action: replyTo, content }, (response) => {
-          console.debug('response received', JSON.stringify(response, null, 2));
-        });
-      })
+      .then((content) => replyTo(content))
       .catch((error) => {
-        chrome.tabs.sendMessage(tabId, { action: 'error', content: `${error.message} ${url}` }, (response) => {
-          console.debug('response received', JSON.stringify(response, null, 2));
-        });
+        // TODO UI
+        console.error(`${error.message} ${url}`);
       });
   }
 
@@ -120,7 +107,12 @@ get((data) => {
 
         toggleIcon(tabId);
 
-        chrome.tabs.reload(tabId);
+        chrome.tabs.reload(tabId, () => {
+          injectPageScript(tabId);
+          getPathname(tabId, (src) => {
+            fetchAsync(tabId, { src, accept: 'text/html', replyTo: (html) => filterHTML(tabId, html) });
+          });
+        });
       }
     );
   }
@@ -142,6 +134,131 @@ get((data) => {
         chrome.tabs.reload(tabId);
       }
     );
+  }
+
+  function getPathname(tabId, callback) {
+    chrome.scripting.executeScript(
+      {
+        target: { tabId },
+        func: () => location.pathname,
+      },
+      callback
+    );
+  }
+
+  function injectPageScript(tabId) {
+    chrome.scripting.executeScript({
+      target: { tabId },
+      func: () => {
+        const script = document.createElement('script');
+        script.setAttribute('type', 'text/javascript');
+        script.setAttribute('src', chrome.runtime.getURL('page.js'));
+        document.head.appendChild(script);
+      },
+    });
+  }
+
+  function removeElements(tabId, element, attribute, container) {
+    chrome.scripting.executeScript({
+      target: { tabId },
+      func: (element, attribute, container) => {
+        [...document.querySelector(container).querySelectorAll(`${element}[${attribute}]`)]
+          .filter((node) => isSameOrigin(node[attribute]))
+          .forEach((node) => node.remove());
+
+        function isSameOrigin(url) {
+          return new URL(url).origin === location.origin;
+        }
+      },
+      args: [element, attribute, container],
+    });
+  }
+
+  function addLink(tabId, { href, type, rel }, container) {
+    chrome.scripting.executeScript({
+      target: { tabId },
+      func: (href, type, rel, container) => {
+        const element = document.createElement('link');
+        element.href = href;
+
+        if (type) {
+          element.type = type;
+        }
+
+        if (rel) {
+          element.rel = rel;
+        }
+
+        document.querySelector(container).appendChild(element);
+      },
+      args: [href, type || null, rel, container],
+    });
+  }
+
+  function addModuleScript({ src }) {
+    chrome.scripting.executeScript({
+      target: { tabId },
+      func: (src) => {
+        const element = document.createElement('script');
+        element.src = src;
+        element.type = 'module';
+        document.querySelector(container).appendChild(element);
+      },
+      args: [src],
+    });
+  }
+
+  function filterHTML(tabId, html) {
+    filter(tabId, html.match(/<head\b.*<[/]head>/s)[0], 'head');
+    filter(tabId, html.match(/<body\b.*<[/]body>/s)[0], 'body');
+  }
+
+  function filter(tabId, html, container) {
+    filterLinks(tabId, html, container);
+    filterScripts(tabId, html, container);
+  }
+
+  function filterLinks(tabId, html, container) {
+    removeElements(tabId, 'link', 'href', container);
+    html
+      .match(/<link\b.*?>/g)
+      ?.map((link) => {
+        const href = link.match(/(?<=href=")(?<href>[^"]+)(?=")/)?.groups['href'];
+        const type = link.match(/(?<=type=")(?<type>[^"]+)(?=")/)?.groups['type'];
+        const rel = link.match(/(?<=rel=")(?<rel>[^"]+)(?=")/)?.groups['rel'];
+        return { href, type, rel };
+      })
+      .filter(({ href }) => href)
+      .forEach(({ href, type, rel }) => addLink(tabId, { href, type, rel }, container));
+  }
+
+  function filterScripts(tabId, html, container) {
+    removeElements(tabId, 'script', 'src', container);
+    html
+      .match(/<script\b.*?><\/script>/g)
+      ?.map((script) => {
+        const src = script.match(/(?<=src=")(?<src>[^"]+)(?=")/)?.groups['src'];
+        const type = script.match(/(?<=type=")(?<type>[^"]+)(?=")/)?.groups['type'];
+        return { src, type };
+      })
+      .filter(({ src }) => src)
+      .forEach(({ src, type }) => {
+        if (type === 'module') {
+          addModuleScript({ src });
+        } else {
+          fetchAsync(tabId, { src, replyTo: (javascript) => injectJavascript(tabId, javascript) });
+        }
+      });
+  }
+
+  function injectJavascript(tabId, javascript) {
+    chrome.scripting.executeScript({
+      target: { tabId },
+      func: (javascript) => {
+        window.postMessage({ action: 'eval', javascript }, location.origin);
+      },
+      args: [javascript],
+    });
   }
 });
 
