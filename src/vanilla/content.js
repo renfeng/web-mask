@@ -32,13 +32,20 @@ chrome.runtime.sendMessage({ action: 'fetch', src: location.pathname, accept: 't
 });
 
 function filterHTML(html) {
-  filterHead(html.match(/<head\b.*<[/]head>/s)[0]);
-  filterBody(html.match(/<body\b.*<[/]body>/s)[0]);
+  filter(html.match(/<head\b.*<[/]head>/s)[0], document.head);
+  filter(html.match(/<body\b.*<[/]body>/s)[0], document.body);
 }
 
-function filterHead(head) {
-  document.head.querySelectorAll('link[href]').forEach((node) => node.remove());
-  head.match(/<link\b.*?>/g)?.forEach((link) => {
+function filter(html, container) {
+  filterLinks(html, container);
+  filterScripts(html, container);
+}
+
+function filterLinks(html, container) {
+  Array.from(container.querySelectorAll('link[href]'))
+    .filter((node) => isSameOrigin(node.href))
+    .forEach((node) => node.remove());
+  html.match(/<link\b.*?>/g)?.forEach((link) => {
     const href = link.match(/(?<=href=")(?<href>[^"]+)(?=")/)?.groups['href'];
     if (!href) {
       return;
@@ -57,13 +64,15 @@ function filterHead(head) {
       element.rel = rel;
     }
 
-    document.head.appendChild(element);
+    container.appendChild(element);
   });
 }
 
-function filterBody(body) {
-  document.body.querySelectorAll('script[src]').forEach((node) => node.remove());
-  body.match(/<script\b.*?><\/script>/g)?.forEach((script) => {
+function filterScripts(html, container) {
+  Array.from(container.querySelectorAll('script[src]'))
+    .filter((node) => isSameOrigin(node.src))
+    .forEach((node) => node.remove());
+  html.match(/<script\b.*?><\/script>/g)?.forEach((script) => {
     const src = script.match(/(?<=src=")(?<src>[^"]+)(?=")/)?.groups['src'];
     if (!src) {
       return;
@@ -74,11 +83,15 @@ function filterBody(body) {
       const element = document.createElement('script');
       element.src = src;
       element.type = 'module';
-      document.body.appendChild(element);
+      container.appendChild(element);
     } else {
       chrome.runtime.sendMessage({ action: 'fetch', src, replyTo: 'javascript' }, callback);
     }
   });
+}
+
+function isSameOrigin(url) {
+  return new URL(url).origin === location.origin;
 }
 
 function callback(response) {

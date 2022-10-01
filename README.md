@@ -1,12 +1,6 @@
-# Angular Mask Chrome Extension
+# Web Mask Chrome Extension
 
-The Angular Mask Chrome Extension allows you to inject a local build of an Angular Frontend into any server environment.
-
-This gives us the following possibilities:
-
-- testing of local changes on servers while these environments are reserved for other releases
-- Hotfix testing directly on server environment with actual data
-- Feature branch integration testing before creating a pull request
+See also [chrome-web-store/README.md](chrome-web-store/README.md)
 
 ## Build
 

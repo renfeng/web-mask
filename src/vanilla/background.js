@@ -46,10 +46,8 @@ get((data) => {
 
   function toggleIcon(tabId) {
     if (isRegistered(tabId) && isEnabled(tabId)) {
-      // known issue: affects other windows
       chrome.action.setIcon({ path: 'icon128.png', tabId });
     } else {
-      // known issue: affects other windows
       chrome.action.setIcon({ path: 'disabled-icon128.png', tabId });
     }
   }
@@ -65,11 +63,19 @@ get((data) => {
         }
         return response.text();
       })
-      .then((content) => {
-        chrome.tabs.sendMessage(tabId, { action: replyTo, content }, (response) => {
-          console.debug('response received', JSON.stringify(response, null, 2));
-        });
-      })
+      .then(
+        (content) =>
+          new Promise((resolve, reject) => {
+            chrome.tabs.sendMessage(tabId, { action: replyTo, content }, (response) => {
+              console.debug('response received', JSON.stringify(response, null, 2));
+              if (response.error) {
+                reject(response.error);
+              } else {
+                resolve(response);
+              }
+            });
+          })
+      )
       .catch((error) => {
         chrome.tabs.sendMessage(tabId, { action: 'error', content: `${error.message} ${url}` }, (response) => {
           console.debug('response received', JSON.stringify(response, null, 2));

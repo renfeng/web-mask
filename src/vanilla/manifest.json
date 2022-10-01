@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Angular Mask",
-  "description": "It overrides resources, JS, CSS, Image, and fonts, of a website with the copies from a local dev server.",
-  "version": "0.10",
+  "name": "Web Mask",
+  "description": "It overrides resources, JS, CSS, Image, and fonts, of a website with the copies from a local web server.",
+  "version": "1.0",
   "icons": {
     "16": "icon16.png",
     "48": "icon48.png",
