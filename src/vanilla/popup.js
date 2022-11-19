@@ -3,7 +3,7 @@ chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
   toggleButton.addEventListener('click', () => {
     const action = toggleButton.innerText.toLowerCase();
     const port = document.getElementById('port').value;
-    const path = Array.from(document.querySelectorAll('input[name=path]')).find((input) => input.checked).value;
+    const path = [...document.querySelectorAll('input[name=path]')].find((input) => input.checked).value;
     chrome.runtime.sendMessage({ action, port, path, tab }, (response) => {
       if (response) {
         console.debug('response received', JSON.stringify(response, null, 2));

@@ -2,8 +2,6 @@
 
 ## Description
 
-It overrides resources, JS, CSS, Image, and fonts, of a website with the copies from a local web server.
-
 It enables you to
 
 - Debug a remote web site, for which source map is usually disabled, with your local web server

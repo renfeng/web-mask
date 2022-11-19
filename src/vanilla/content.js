@@ -42,9 +42,7 @@ function filter(html, container) {
 }
 
 function filterLinks(html, container) {
-  Array.from(container.querySelectorAll('link[href]'))
-    .filter((node) => isSameOrigin(node.href))
-    .forEach((node) => node.remove());
+  removeElement(container, 'link', 'href');
   html.match(/<link\b.*?>/g)?.forEach((link) => {
     const href = link.match(/(?<=href=")(?<href>[^"]+)(?=")/)?.groups['href'];
     if (!href) {
@@ -69,9 +67,7 @@ function filterLinks(html, container) {
 }
 
 function filterScripts(html, container) {
-  Array.from(container.querySelectorAll('script[src]'))
-    .filter((node) => isSameOrigin(node.src))
-    .forEach((node) => node.remove());
+  removeElement(container, 'script', 'src');
   html.match(/<script\b.*?><\/script>/g)?.forEach((script) => {
     const src = script.match(/(?<=src=")(?<src>[^"]+)(?=")/)?.groups['src'];
     if (!src) {
@@ -88,6 +84,12 @@ function filterScripts(html, container) {
       chrome.runtime.sendMessage({ action: 'fetch', src, replyTo: 'javascript' }, callback);
     }
   });
+}
+
+function removeElement(container, element, attribute) {
+  [...container.querySelectorAll(`${element}[${attribute}]`)]
+    .filter((node) => isSameOrigin(node[attribute]))
+    .forEach((node) => node.remove());
 }
 
 function isSameOrigin(url) {
