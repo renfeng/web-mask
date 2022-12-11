@@ -18,10 +18,10 @@ get((data) => {
     const { action } = message;
     try {
       if (action === 'fetch') {
-        if (isRegistered(tabId) && isEnabled(tabId)) {
-          fetchAsync(tabId, message);
+        if (isEnabled(tabId)) {
+          fetchAsync(tabId, message, sendResponse);
+          return true;
         }
-        sendResponse('success');
       } else if (action === 'ping') {
         if (isRegistered(tabId)) {
           sendResponse(registeredTabs[tabId]);
@@ -45,42 +45,28 @@ get((data) => {
   }
 
   function toggleIcon(tabId) {
-    if (isRegistered(tabId) && isEnabled(tabId)) {
+    if (isEnabled(tabId)) {
       chrome.action.setIcon({ path: 'icon128.png', tabId });
     } else {
       chrome.action.setIcon({ path: 'disabled-icon128.png', tabId });
     }
   }
 
-  function fetchAsync(tabId, message) {
-    const { src, accept, replyTo } = message;
+  async function fetchAsync(tabId, message, sendResponse) {
+    const { src, accept } = message;
     const { port, path } = registeredTabs[tabId];
     const url = new URL(src, `http://localhost:${port}${path}`);
-    fetch(url, { headers: { Accept: accept || '*/*' } })
-      .then((response) => {
-        if (response.status >= 400) {
-          throw new Error(response.statusText);
-        }
-        return response.text();
-      })
-      .then(
-        (content) =>
-          new Promise((resolve, reject) => {
-            chrome.tabs.sendMessage(tabId, { action: replyTo, content }, (response) => {
-              console.debug('response received', JSON.stringify(response, null, 2));
-              if (response.error) {
-                reject(response.error);
-              } else {
-                resolve(response);
-              }
-            });
-          })
-      )
-      .catch((error) => {
-        chrome.tabs.sendMessage(tabId, { action: 'error', content: `${error.message} ${url}` }, (response) => {
-          console.debug('response received', JSON.stringify(response, null, 2));
-        });
-      });
+    try {
+      const response = await fetch(url, { headers: { Accept: accept || '*/*' } });
+      if (response.status >= 400) {
+        sendResponse({ error: { message: response.statusText } });
+      }
+      const content = await response.text();
+      sendResponse(content);
+    } catch (error) {
+      const { message, stack } = error;
+      sendResponse({ error: { message, stack } });
+    }
   }
 
   function isRegistered(tabId) {
@@ -88,7 +74,7 @@ get((data) => {
   }
 
   function isEnabled(tabId) {
-    return registeredTabs[tabId]?.enabled;
+    return isRegistered(tabId) && registeredTabs[tabId]?.enabled;
   }
 
   function enable(tab, port, path) {

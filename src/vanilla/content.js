@@ -1,30 +1,10 @@
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  console.log(`message received: ${JSON.stringify(message, null, 2)}, ${JSON.stringify(sender)}`);
-  try {
-    if (message.action === 'html') {
-      filterHTML(message.content);
-      sendResponse('success');
-    } else if (message.action === 'javascript') {
-      injectJavascript(message.content);
-      sendResponse('success');
-    } else if (message.action === 'error') {
-      alert(message.content);
-      sendResponse('success');
-    } else {
-      sendResponse('not implemented');
-    }
-  } catch (error) {
-    const { message, stack } = error;
-    sendResponse({ error: { message, stack } });
-  }
-});
-
-chrome.runtime.sendMessage({ action: 'fetch', src: location.pathname, accept: 'text/html', replyTo: 'html' }, (response) => {
+chrome.runtime.sendMessage({ action: 'fetch', src: location.pathname, accept: 'text/html' }, (response) => {
   if (chrome.runtime.lastError) {
     console.error('error occurred', chrome.runtime.lastError);
     return;
   }
   console.debug('response received', JSON.stringify(response, null, 2));
+  filterHTML(response);
 
   const script = document.createElement('script');
   script.setAttribute('type', 'text/javascript');
@@ -82,12 +62,13 @@ function filterScripts(html, container) {
       element.type = 'module';
       container.appendChild(element);
     } else {
-      chrome.runtime.sendMessage({ action: 'fetch', src, replyTo: 'javascript' }, (response) => {
+      chrome.runtime.sendMessage({ action: 'fetch', src }, (response) => {
         if (chrome.runtime.lastError) {
           console.error('error occurred', chrome.runtime.lastError);
           return;
         }
         console.debug('response received', JSON.stringify(response, null, 2));
+        injectJavascript(response);
       });
     }
   });
