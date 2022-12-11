@@ -5,15 +5,15 @@ chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
     const port = document.getElementById('port').value;
     const path = [...document.querySelectorAll('input[name=path]')].find((input) => input.checked).value;
     chrome.runtime.sendMessage({ action, port, path, tab }, (response) => {
-      if (response) {
-        console.debug('response received', JSON.stringify(response, null, 2));
-        if (response.error) {
-          alert(response.error.message);
-        } else {
-          location.reload();
-        }
-      } else if (chrome.runtime.lastError) {
+      if (chrome.runtime.lastError) {
         console.error('error occurred', chrome.runtime.lastError);
+        return;
+      }
+      console.debug('response received', JSON.stringify(response, null, 2));
+      if (response?.error) {
+        alert(response.error.message);
+      } else {
+        location.reload();
       }
     });
   });

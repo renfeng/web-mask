@@ -1,5 +1,5 @@
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  console.log(`message received: ${JSON.stringify(message, null, 2)}, ${JSON.stringify(sender, null, 2)}`);
+  console.log(`message received: ${JSON.stringify(message, null, 2)}, ${JSON.stringify(sender)}`);
   try {
     if (message.action === 'html') {
       filterHTML(message.content);
@@ -20,15 +20,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 chrome.runtime.sendMessage({ action: 'fetch', src: location.pathname, accept: 'text/html', replyTo: 'html' }, (response) => {
-  if (response) {
-    console.debug('response received', JSON.stringify(response, null, 2));
-    const script = document.createElement('script');
-    script.setAttribute('type', 'text/javascript');
-    script.setAttribute('src', chrome.runtime.getURL('page.js'));
-    document.head.appendChild(script);
-  } else if (chrome.runtime.lastError) {
+  if (chrome.runtime.lastError) {
     console.error('error occurred', chrome.runtime.lastError);
+    return;
   }
+  console.debug('response received', JSON.stringify(response, null, 2));
+
+  const script = document.createElement('script');
+  script.setAttribute('type', 'text/javascript');
+  script.setAttribute('src', chrome.runtime.getURL('page.js'));
+  document.head.appendChild(script);
 });
 
 function filterHTML(html) {
@@ -81,7 +82,13 @@ function filterScripts(html, container) {
       element.type = 'module';
       container.appendChild(element);
     } else {
-      chrome.runtime.sendMessage({ action: 'fetch', src, replyTo: 'javascript' }, callback);
+      chrome.runtime.sendMessage({ action: 'fetch', src, replyTo: 'javascript' }, (response) => {
+        if (chrome.runtime.lastError) {
+          console.error('error occurred', chrome.runtime.lastError);
+          return;
+        }
+        console.debug('response received', JSON.stringify(response, null, 2));
+      });
     }
   });
 }
@@ -94,14 +101,6 @@ function removeElement(container, element, attribute) {
 
 function isSameOrigin(url) {
   return new URL(url).origin === location.origin;
-}
-
-function callback(response) {
-  if (response) {
-    console.debug('response received', JSON.stringify(response, null, 2));
-  } else if (chrome.runtime.lastError) {
-    console.error('error occurred', chrome.runtime.lastError);
-  }
 }
 
 function injectJavascript(javascript) {

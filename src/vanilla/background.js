@@ -110,7 +110,7 @@ get((data) => {
               },
             },
             condition: {
-              requestDomains: [domain],
+              regexFilter: `^(https|http)://${domain}/.*`,
               resourceTypes: ['script', 'stylesheet', 'image', 'font'],
               tabIds: [tabId],
             },
