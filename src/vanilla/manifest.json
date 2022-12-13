@@ -18,7 +18,6 @@
     {
       "matches": ["*://*/*"],
       "js": ["content.js"],
-      "css": [],
       "all_frames": true
     }
   ],
@@ -28,6 +27,6 @@
       "resources": ["page.js"]
     }
   ],
-  "permissions": ["declarativeNetRequestWithHostAccess", "storage"],
+  "permissions": ["declarativeNetRequestWithHostAccess"],
   "host_permissions": ["https://*/"]
 }
