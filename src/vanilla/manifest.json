@@ -27,6 +27,6 @@
       "resources": ["page.js"]
     }
   ],
-  "permissions": ["declarativeNetRequestWithHostAccess"],
+  "permissions": ["declarativeNetRequestWithHostAccess", "webRequest"],
   "host_permissions": ["https://*/"]
 }

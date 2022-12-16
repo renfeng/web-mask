@@ -12,23 +12,28 @@
     </style>
   </head>
   <body>
-    <p>Is your web server running at http://localhost:<snap class="port-text">4200</snap><span class="path-text">/</span></p>
-    <dl>
-      <dt>Context path</dt>
-      <dd id="default-path">
-        <label>
-          <input name="path" type="radio" value="/" checked />
-          <span>/</span>
-        </label>
-      </dd>
-    </dl>
-    <label>
-      <span>Local port</span>
-      <input id="port" value="4200" />
-    </label>
-    <p>
-      <button id="toggle">Enable</button>
-    </p>
+    <div id="enabled">
+      <p>Is your web server running at http://localhost:<snap id="port-text">4200</snap><span id="path-text">/</span></p>
+      <dl>
+        <dt>Context path</dt>
+        <dd id="default-path">
+          <label>
+            <input name="path" type="radio" value="/" checked />
+            <span>/</span>
+          </label>
+        </dd>
+      </dl>
+      <label>
+        <span>Local port</span>
+        <input id="port" value="4200" />
+      </label>
+      <p>
+        <button id="toggle">Enable</button>
+      </p>
+    </div>
+    <div id="disabled">
+      <label>Web Mask doesn't work on this site.</label>
+    </div>
     <script src="popup.js"></script>
   </body>
 </html>

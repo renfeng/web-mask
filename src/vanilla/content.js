@@ -1,34 +1,68 @@
-const storageKey = `chrome://extensions/?id=${chrome.runtime.id}`;
-const state = JSON.parse(sessionStorage.getItem(storageKey)) || {
-  path: '/',
+const key = `chrome://extensions/?id=${chrome.runtime.id}`;
+const state = JSON.parse(sessionStorage.getItem(key)) || {
   port: 0,
+  path: '/',
   enabled: false,
 };
 
-if (state.enabled) {
-  loadHTML();
-  injectPageScript();
-}
+let requests = {};
 
-setIcon();
+(async () => {
+  if (state.enabled) {
+    const action = 'enable';
+    const { port, path } = state;
+    const response = await chrome.runtime.sendMessage({ action, port, path });
+    if (response) {
+      loadHTML();
+      injectPageScript();
+    }
+  }
+})();
+
+let timeout = null;
+document.addEventListener('DOMNodeInserted', debounce);
 
 chrome.runtime.onMessage.addListener(onMessage);
 
+function debounce() {
+  clearTimeout(timeout);
+  timeout = setTimeout(() => {
+    if (Object.keys(requests) > 0) {
+      console.log('Pending on requests...', requests);
+      setTimeout(debounce, 100);
+      return;
+    }
+    window.postMessage({ action: 'ready', key }, location.origin);
+  }, 1000);
+  // TODO make timeout duration arbitary
+}
+
 function onMessage(message, sender, sendResponse) {
   console.log(`message received: ${JSON.stringify(message, null, 2)}, ${JSON.stringify(sender)}`);
-  const { action, data } = message;
+  const { action, ...data } = message;
   try {
     if (action === 'ping') {
       sendResponse(state);
     } else if (action === 'enable') {
       const { port, path } = data;
       Object.assign(state, { enabled: true, port, path });
-      sessionStorage.setItem(storageKey, JSON.stringify(state));
+      sessionStorage.setItem(key, JSON.stringify(state));
       location.reload();
+      sendResponse('success');
     } else if (action === 'disable') {
       state.enabled = false;
-      sessionStorage.setItem(storageKey, JSON.stringify(state));
+      sessionStorage.setItem(key, JSON.stringify(state));
       location.reload();
+      sendResponse('success');
+    } else if (action === 'add-request') {
+      const { requestId } = data;
+      requests[requestId] = data;
+    } else if (action === 'remove-request') {
+      const { requestId } = data;
+      delete requests[requestId];
+      if (Object.keys(requests) === 0) {
+        debounce();
+      }
     }
   } catch (error) {
     const { message, stack } = error;
@@ -123,17 +157,14 @@ function injectJavascript(javascript) {
 }
 
 async function fetchAsync({ src, accept, port, path }) {
-  const response = await chrome.runtime.sendMessage({ action: 'fetch', data: { src, accept, port, path } });
+  const response = await chrome.runtime.sendMessage({ action: 'fetch', src, accept, port, path });
   if (chrome.runtime.lastError) {
-    throw chrome.runtime.lastError;
+    const { message } = chrome.runtime.lastError;
+    throw message;
   }
   if (response?.error) {
-    throw response.error;
+    const { message } = response.error;
+    throw message;
   }
   return response;
-}
-
-function setIcon() {
-  const { enabled } = state;
-  chrome.runtime.sendMessage({ action: 'icon', data: { enabled } });
 }
