@@ -12,6 +12,11 @@ bin/run-vuejs.sh
 
 rm -rf "${target}"
 bin/build.sh
+
+if command -v cygpath; then
+  path=$(cygpath -w "$(realpath dist/public)")
+  sed -i "s~dist/public~${path//\\/\\\\\\\\}~g" wdio.conf.js
+fi
 npm run wdio || true
 
 bin/kill-vuejs.sh
