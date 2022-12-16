@@ -6,7 +6,7 @@ chrome.webRequest.onCompleted.addListener((details) => countRequestsAsync({ acti
 chrome.webRequest.onErrorOccurred.addListener((details) => countRequestsAsync({ action: 'remove-request', ...details }), filter);
 
 function onMessage(message, sender, sendResponse) {
-  console.log(`message received: ${JSON.stringify(message, null, 2)}, ${JSON.stringify(sender)}`);
+  console.debug(`message received: ${JSON.stringify(message, null, 2)}, ${JSON.stringify(sender)}`);
   const tab = sender.tab || message.tab;
   const { id: tabId, url } = tab;
   const { action, ...data } = message;
@@ -104,12 +104,12 @@ function setIcon(tabId, enabled) {
 }
 
 async function countRequestsAsync({ action, ...data }) {
-  const { tabId } = data;
+  const { tabId, requestId, url } = data;
   if (tabId === -1) {
     return;
   }
   try {
-    await chrome.tabs.sendMessage(tabId, { action, ...data });
+    await chrome.tabs.sendMessage(tabId, { action, requestId, url });
   } catch (error) {
     const { message } = error;
     if (message !== 'Could not establish connection. Receiving end does not exist.') {

@@ -38,7 +38,7 @@ function debounce() {
 }
 
 function onMessage(message, sender, sendResponse) {
-  console.log(`message received: ${JSON.stringify(message, null, 2)}, ${JSON.stringify(sender)}`);
+  console.debug(`message received: ${JSON.stringify(message, null, 2)}, ${JSON.stringify(sender)}`);
   const { action, ...data } = message;
   try {
     if (action === 'ping') {
