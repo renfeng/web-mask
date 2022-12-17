@@ -9,11 +9,18 @@
       p {
         text-align: center;
       }
+      #enabled,
+      #disabled {
+        display: none;
+      }
     </style>
   </head>
   <body>
+    <div id="splash">
+      <p>Loading...</p>
+    </div>
     <div id="enabled">
-      <p>Is your web server running at http://localhost:<snap id="port-text">4200</snap><span id="path-text">/</span></p>
+      <p>Is your web server running at http://localhost:<snap id="port-text">0</snap><span id="path-text">/</span></p>
       <dl>
         <dt>Context path</dt>
         <dd id="default-path">
@@ -25,10 +32,10 @@
       </dl>
       <label>
         <span>Local port</span>
-        <input id="port" value="4200" />
+        <input id="port" value="0" />
       </label>
       <p>
-        <button id="toggle">Enable</button>
+        <button id="toggle" disabled>Enable</button>
       </p>
     </div>
     <div id="disabled">

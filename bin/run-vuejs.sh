@@ -11,6 +11,7 @@ if [ ! -e ${target} ]; then
 fi
 cd ${target}
 src=$(cat src/index.md)
+# see also test/specs/vuejs.e2e.js
 echo >src/index.md "${src/Vue.js - The Progressive JavaScript Framework/Web Mask is on!}"
 pnpm i
 pnpm run dev &

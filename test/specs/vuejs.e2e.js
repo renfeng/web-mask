@@ -2,6 +2,8 @@ import { expect, $ } from '@wdio/globals';
 
 describe('Web Mask on vuejs', () => {
   const url = 'https://vuejs.org/';
+  const port = 5173;
+  const path = '/';
 
   before(async () => {
     await browser.url('chrome://extensions/');
@@ -10,11 +12,12 @@ describe('Web Mask on vuejs', () => {
     await browser.url(url);
 
     const webMaskKey = `chrome://extensions/?id=${webMaskExtensionId}`;
-    await enableWebMaskAsync(webMaskKey, 5173, '/');
+    await enableWebMaskAsync(webMaskKey, port, path);
     await isWebMaskReadyAsync(webMaskKey);
   });
 
   it('should work for vuejs', async () => {
+    // See also bin/test.sh
     expect(await browser.execute(() => document.title)).toBe('Web Mask is on! | Vue.js');
   });
 });

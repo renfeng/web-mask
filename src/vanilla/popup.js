@@ -1,38 +1,41 @@
 chrome.tabs.query({ active: true, currentWindow: true }, async ([tab]) => {
   const { id, url } = tab;
   if (url) {
-    document.getElementById('disabled').style.display = 'none';
+    document.getElementById('enabled').style.display = 'initial';
   } else {
-    document.getElementById('enabled').style.display = 'none';
+    document.getElementById('disabled').style.display = 'initial';
   }
+  document.getElementById('splash').style.display = 'none';
 
   const toggleButton = document.getElementById('toggle');
-  toggleButton.addEventListener('click', () => {
-    const action = toggleButton.innerText.toLowerCase();
+  toggleButton.addEventListener('click', async () => {
+    toggleButton.disabled = true;
+    const actions = { enable: 'add-rules', disable: 'remove-rules' };
+    const action = actions[toggleButton.innerText.toLowerCase()];
     const port = parseInt(document.getElementById('port').value);
     const path = [...document.querySelectorAll('input[name=path]')].find((input) => input.checked).value;
-    chrome.runtime.sendMessage({ action, port, path, tab: { id, url } }, (response) => {
-      if (chrome.runtime.lastError) {
-        console.error('error occurred', chrome.runtime.lastError);
-        return;
-      }
-      console.debug('response received', JSON.stringify(response, null, 2));
-      if (response?.error) {
-        alert(response.error.message);
-      } else {
-        location.reload();
-      }
-    });
+    const response = await chrome.runtime.sendMessage({ action, port, path, tab: { id, url } });
+    if (chrome.runtime.lastError) {
+      alert(`error occurred: ${chrome.runtime.lastError}`);
+      return;
+    }
+    console.debug('response received', JSON.stringify(response, null, 2));
+    if (response?.error) {
+      alert(`error occurred: ${response.error.message}`);
+    } else {
+      location.reload();
+    }
   });
 
   const response = await chrome.runtime.sendMessage({ action: 'ping', tab: { id } });
   if (chrome.runtime.lastError) {
-    console.error('error occurred', chrome.runtime.lastError);
+    alert(`error occurred: ${chrome.runtime.lastError}`);
     return;
   }
   console.debug('response received', JSON.stringify(response, null, 2));
   const { enabled, path, port } = response;
   toggleButton.innerText = enabled ? 'Disable' : 'Enable';
+  toggleButton.disabled = false;
 
   const defaultPath = document.getElementById('default-path');
   const input = defaultPath.querySelector('input');

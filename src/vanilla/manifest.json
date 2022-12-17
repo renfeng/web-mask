@@ -28,5 +28,5 @@
     }
   ],
   "permissions": ["declarativeNetRequestWithHostAccess", "webRequest"],
-  "host_permissions": ["https://*/"]
+  "host_permissions": ["*://*/*"]
 }

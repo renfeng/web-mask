@@ -6,35 +6,62 @@ const state = JSON.parse(sessionStorage.getItem(key)) || {
 };
 
 let requests = {};
+let stateSynchronised = false;
+let javascriptInjection = new Set();
 
 (async () => {
-  if (state.enabled) {
-    const action = 'enable';
-    const { port, path } = state;
-    const response = await chrome.runtime.sendMessage({ action, port, path });
-    if (response) {
-      loadHTML();
+  const hasRules = await chrome.runtime.sendMessage({ action: 'has-rules' });
+  const { port, path, enabled } = state;
+  if (enabled) {
+    if (!hasRules) {
+      await chrome.runtime.sendMessage({ action: 'add-rules', port, path });
+    } else {
       injectPageScript();
+      await loadHTMLAsync();
+      stateSynchronised = true;
     }
+  } else if (hasRules) {
+    await chrome.runtime.sendMessage({ action: 'remove-rules', port, path });
+  } else {
+    stateSynchronised = true;
   }
 })();
 
-let timeout = null;
-document.addEventListener('DOMNodeInserted', debounce);
+const observer = new MutationObserver((mutationList, observer) => {
+  console.log('Mutation', mutationList, observer);
+  debounce();
+});
+observer.observe(document.body, { attributes: true, childList: true, subtree: true });
 
 chrome.runtime.onMessage.addListener(onMessage);
 
+window.addEventListener('message', (event) => {
+  console.log('message received', event.data);
+  if (event.data.action === 'complete-javascript-injection') {
+    javascriptInjection.delete(event.data.src);
+  }
+});
+
+let timeout = null;
 function debounce() {
+  if (!state.enabled || !stateSynchronised) {
+    return;
+  }
   clearTimeout(timeout);
   timeout = setTimeout(() => {
-    if (Object.keys(requests) > 0) {
+    if (Object.keys(requests).length > 0) {
       console.log('Pending on requests...', requests);
       setTimeout(debounce, 100);
       return;
     }
+    if (javascriptInjection.size > 0) {
+      console.log('Pending on javascript...', javascriptInjection);
+      setTimeout(debounce, 100);
+      return;
+    }
+    console.log('ready', new Date().toISOString(), document.title);
     window.postMessage({ action: 'ready', key }, location.origin);
-  }, 1000);
-  // TODO make timeout duration arbitary
+  }, 100);
 }
 
 function onMessage(message, sender, sendResponse) {
@@ -43,26 +70,22 @@ function onMessage(message, sender, sendResponse) {
   try {
     if (action === 'ping') {
       sendResponse(state);
-    } else if (action === 'enable') {
-      const { port, path } = data;
-      Object.assign(state, { enabled: true, port, path });
+    } else if (action === 'set-state') {
+      const { enabled, port, path } = data;
+      Object.assign(state, { enabled, port, path });
       sessionStorage.setItem(key, JSON.stringify(state));
       location.reload();
-      sendResponse('success');
-    } else if (action === 'disable') {
-      state.enabled = false;
-      sessionStorage.setItem(key, JSON.stringify(state));
-      location.reload();
-      sendResponse('success');
+      sendResponse();
     } else if (action === 'add-request') {
       const { requestId } = data;
       requests[requestId] = data;
+      debounce();
+      sendResponse();
     } else if (action === 'remove-request') {
       const { requestId } = data;
       delete requests[requestId];
-      if (Object.keys(requests) === 0) {
-        debounce();
-      }
+      debounce();
+      sendResponse();
     }
   } catch (error) {
     const { message, stack } = error;
@@ -70,12 +93,16 @@ function onMessage(message, sender, sendResponse) {
   }
 }
 
-async function loadHTML() {
+async function loadHTMLAsync() {
   const { port, path } = state;
   const src = location.pathname;
   const accept = 'text/html';
-  const response = await fetchAsync({ accept, src, port, path });
-  filterHTML(response);
+  try {
+    const response = await fetchAsync({ accept, src, port, path });
+    filterHTML(response);
+  } catch (error) {
+    alert(`${error}: ${src}`);
+  }
 }
 
 function injectPageScript() {
@@ -136,8 +163,12 @@ function filterScripts(html, container) {
       container.appendChild(element);
     } else {
       const { port, path } = state;
-      const response = await fetchAsync({ src, port, path });
-      injectJavascript(response);
+      try {
+        const response = await fetchAsync({ src, port, path });
+        injectJavascript(src, response);
+      } catch (error) {
+        alert(`${error}: ${src}`);
+      }
     }
   });
 }
@@ -152,12 +183,13 @@ function isSameOrigin(url) {
   return new URL(url).origin === location.origin;
 }
 
-function injectJavascript(javascript) {
-  window.postMessage({ action: 'eval', javascript }, location.origin);
+function injectJavascript(src, javascript) {
+  javascriptInjection.add(src);
+  window.postMessage({ action: 'eval', src, javascript }, location.origin);
 }
 
-async function fetchAsync({ src, accept, port, path }) {
-  const response = await chrome.runtime.sendMessage({ action: 'fetch', src, accept, port, path });
+async function fetchAsync({ accept, src, port, path }) {
+  const response = await chrome.runtime.sendMessage({ action: 'fetch', accept, src, port, path });
   if (chrome.runtime.lastError) {
     const { message } = chrome.runtime.lastError;
     throw message;
