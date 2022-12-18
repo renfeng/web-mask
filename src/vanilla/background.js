@@ -9,27 +9,27 @@ chrome.webRequest.onErrorOccurred.addListener((details) => countRequestsAsync({ 
 function onMessage(message, sender, sendResponse) {
   console.debug(`message received: ${JSON.stringify(message, null, 2)}, ${JSON.stringify(sender)}`);
   const tab = sender.tab || message.tab;
-  const { id: tabId, url } = tab;
+  const { id: tabId } = tab;
   const { action, ...data } = message;
   try {
-    if (action === 'fetch') {
-      const { accept, src, port, path } = data;
-      fetchAsync({ accept, src, port, path }, sendResponse);
+    if (['ping', 'set-state'].includes(action)) {
+      chrome.tabs.sendMessage(tabId, message, sendResponse);
       return true;
-    } else if (action === 'ping') {
-      pingAsync(tabId, sendResponse);
+    } else if (action === 'fetch') {
+      const { accept, url } = data;
+      fetchAsync({ accept, url }, sendResponse);
       return true;
     } else if (action === 'has-rules') {
-      hasRulesAsync(tabId, sendResponse);
+      const { rules } = data;
+      hasRulesAsync(tabId, rules, sendResponse);
       return true;
     } else if (action === 'add-rules') {
-      const { port, path } = data;
-      const domain = new URL(url).host;
-      addRulesAsync(tabId, domain, port, path, sendResponse);
+      const { rules } = data;
+      addRulesAsync(tabId, rules, sendResponse);
       return true;
     } else if (action === 'remove-rules') {
-      const { port, path } = data;
-      removeRulesAsync(tabId, port, path, sendResponse);
+      const { rules } = data;
+      removeRulesAsync(tabId, rules, sendResponse);
       return true;
     }
   } catch (error) {
@@ -38,8 +38,7 @@ function onMessage(message, sender, sendResponse) {
   }
 }
 
-async function fetchAsync({ accept, src, port, path }, sendResponse) {
-  const url = new URL(src, `http://localhost:${port}${path}`);
+async function fetchAsync({ accept, url }, sendResponse) {
   try {
     const response = await fetch(url, { headers: { Accept: accept || '*/*' } });
     if (response.status >= 400) {
@@ -53,58 +52,52 @@ async function fetchAsync({ accept, src, port, path }, sendResponse) {
   }
 }
 
-async function pingAsync(tabId, sendResponse) {
-  try {
-    const response = await chrome.tabs.sendMessage(tabId, { action: 'ping' });
-    sendResponse(response);
-  } catch (error) {
-    const { message } = error;
-    if (message === 'Could not establish connection. Receiving end does not exist.') {
-      pingAsync(tabId, sendResponse);
-    } else {
-      throw message;
-    }
-  }
-}
-
-async function hasRulesAsync(tabId, sendResponse) {
-  const rules = await chrome.declarativeNetRequest.getSessionRules();
-  const hasRules = rules.some((rule) => rule.id === tabId);
+async function hasRulesAsync(tabId, rules, sendResponse) {
+  const existingRules = await chrome.declarativeNetRequest.getSessionRules();
+  const ruleIds = rules.map((rule) => rule.id);
+  const hasRules = existingRules.some(({ id }) => ruleIds.includes(id));
   setIcon(tabId, hasRules);
   sendResponse(hasRules);
 }
 
-async function addRulesAsync(tabId, domain, port, path, sendResponse) {
+async function addRulesAsync(tabId, rules, sendResponse) {
   setIcon(tabId, true);
-  await chrome.declarativeNetRequest.updateSessionRules({
-    addRules: [
-      {
-        id: tabId,
-        action: {
-          type: 'redirect',
-          redirect: {
-            transform: { scheme: 'http', host: 'localhost', port: `${port}` },
-          },
-        },
-        condition: {
-          regexFilter: `^(https|http)://${domain}/.*`,
-          resourceTypes: ['script', 'stylesheet', 'image', 'font'],
-          tabIds: [tabId],
-        },
-      },
-    ],
-  });
-  console.log(`enabling tab: ${tabId}`);
-  await chrome.tabs.sendMessage(tabId, { action: 'set-state', enabled: true, port, path });
+  const availableRuleIds = await getAvailableRuleIdsAsync(rules.length);
+  const addRules = rules.map((rule, index) => ({
+    ...rule,
+    id: availableRuleIds[index],
+    condition: { ...rule.condition, tabIds: [tabId] },
+  }));
+  await chrome.declarativeNetRequest.updateSessionRules({ addRules });
+  sendResponse(addRules);
+}
+
+async function removeRulesAsync(tabId, rules, sendResponse) {
+  setIcon(tabId, false);
+  const removeRuleIds = rules.map((rule) => rule.id);
+  await chrome.declarativeNetRequest.updateSessionRules({ removeRuleIds });
   sendResponse();
 }
 
-async function removeRulesAsync(tabId, port, path, sendResponse) {
-  setIcon(tabId, false);
-  await chrome.declarativeNetRequest.updateSessionRules({ removeRuleIds: [tabId] });
-  console.log(`disabling tab: ${tabId}`);
-  await chrome.tabs.sendMessage(tabId, { action: 'set-state', enabled: false, port, path });
-  sendResponse();
+async function getAvailableRuleIdsAsync(count) {
+  const rules = await chrome.declarativeNetRequest.getSessionRules();
+  const occupiedRuleIds = rules.map((rule) => rule.id);
+  const availableRuleIds = [];
+  for (let id = 1; id < Math.pow(2, 31); id++) {
+    const index = occupiedRuleIds.indexOf(id);
+    if (index === -1) {
+      availableRuleIds.push(id);
+      if (availableRuleIds.length === count) {
+        break;
+      }
+    } else {
+      occupiedRuleIds.splice(index, 1);
+    }
+  }
+  if (availableRuleIds.length < count) {
+    throw 'Not enough rule ids';
+  }
+  return availableRuleIds;
 }
 
 function setIcon(tabId, enabled) {

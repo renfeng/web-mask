@@ -4,6 +4,20 @@ describe('Web Mask on vuejs', () => {
   const url = 'https://vuejs.org/';
   const port = 5173;
   const path = '/';
+  const rules = [
+    {
+      action: {
+        type: 'redirect',
+        redirect: {
+          transform: { scheme: 'http', host: 'localhost', port: `${port}` },
+        },
+      },
+      condition: {
+        regexFilter: `^${new URL(url).origin}/.*`,
+        resourceTypes: ['script', 'stylesheet', 'image', 'font'],
+      },
+    },
+  ];
 
   before(async () => {
     await browser.url('chrome://extensions/');
@@ -12,7 +26,7 @@ describe('Web Mask on vuejs', () => {
     await browser.url(url);
 
     const webMaskKey = `chrome://extensions/?id=${webMaskExtensionId}`;
-    await enableWebMaskAsync(webMaskKey, port, path);
+    await enableWebMaskAsync(webMaskKey, port, path, rules);
     await isWebMaskReadyAsync(webMaskKey);
   });
 
@@ -31,8 +45,8 @@ function getExtentionId(name) {
   ].find((item) => item.shadowRoot.querySelector('#name').innerText === name)?.id;
 }
 
-async function enableWebMaskAsync(webMaskKey, port, path) {
-  await browser.execute(setStorage, webMaskKey, { port, path, enabled: true });
+async function enableWebMaskAsync(webMaskKey, port, path, rules) {
+  await browser.execute(setStorage, webMaskKey, { port, path, enabled: true, rules });
   await browser.execute(() => location.reload());
 }
 

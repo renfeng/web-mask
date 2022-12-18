@@ -10,11 +10,10 @@ chrome.tabs.query({ active: true, currentWindow: true }, async ([tab]) => {
   const toggleButton = document.getElementById('toggle');
   toggleButton.addEventListener('click', async () => {
     toggleButton.disabled = true;
-    const actions = { enable: 'add-rules', disable: 'remove-rules' };
-    const action = actions[toggleButton.innerText.toLowerCase()];
     const port = parseInt(document.getElementById('port').value);
     const path = [...document.querySelectorAll('input[name=path]')].find((input) => input.checked).value;
-    const response = await chrome.runtime.sendMessage({ action, port, path, tab: { id, url } });
+    const enabled = toggleButton.innerText === 'Enable';
+    const response = await chrome.runtime.sendMessage({ action: 'set-state', port, path, enabled, tab: { id } });
     if (chrome.runtime.lastError) {
       alert(`error occurred: ${chrome.runtime.lastError}`);
       return;
@@ -33,7 +32,7 @@ chrome.tabs.query({ active: true, currentWindow: true }, async ([tab]) => {
     return;
   }
   console.debug('response received', JSON.stringify(response, null, 2));
-  const { enabled, path, port } = response;
+  const { port, path, enabled } = response;
   toggleButton.innerText = enabled ? 'Disable' : 'Enable';
   toggleButton.disabled = false;
 

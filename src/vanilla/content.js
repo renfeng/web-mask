@@ -1,38 +1,3 @@
-const key = `chrome://extensions/?id=${chrome.runtime.id}`;
-const state = JSON.parse(sessionStorage.getItem(key)) || {
-  port: 0,
-  path: '/',
-  enabled: false,
-};
-
-let requests = {};
-let stateSynchronised = false;
-let javascriptInjection = new Set();
-
-(async () => {
-  const hasRules = await chrome.runtime.sendMessage({ action: 'has-rules' });
-  const { port, path, enabled } = state;
-  if (enabled) {
-    if (!hasRules) {
-      await chrome.runtime.sendMessage({ action: 'add-rules', port, path });
-    } else {
-      injectPageScript();
-      await loadHTMLAsync();
-      stateSynchronised = true;
-    }
-  } else if (hasRules) {
-    await chrome.runtime.sendMessage({ action: 'remove-rules', port, path });
-  } else {
-    stateSynchronised = true;
-  }
-})();
-
-const observer = new MutationObserver((mutationList, observer) => {
-  console.log('Mutation', mutationList, observer);
-  debounce();
-});
-observer.observe(document.body, { attributes: true, childList: true, subtree: true });
-
 chrome.runtime.onMessage.addListener(onMessage);
 
 window.addEventListener('message', (event) => {
@@ -41,6 +6,55 @@ window.addEventListener('message', (event) => {
     javascriptInjection.delete(event.data.src);
   }
 });
+
+const observer = new MutationObserver((mutationList, observer) => {
+  console.log('Mutation', mutationList, observer);
+  debounce();
+});
+observer.observe(document.body, { attributes: true, childList: true, subtree: true });
+
+const key = `chrome://extensions/?id=${chrome.runtime.id}`;
+const state = JSON.parse(sessionStorage.getItem(key)) || {
+  port: 0,
+  path: '/',
+  enabled: false,
+  rules: [
+    {
+      action: {
+        type: 'redirect',
+        redirect: {
+          transform: { scheme: 'http', host: 'localhost', port: '0' },
+        },
+      },
+      condition: {
+        regexFilter: `^${location.origin}/.*`,
+        resourceTypes: ['script', 'stylesheet', 'image', 'font'],
+      },
+    },
+  ],
+};
+
+let requests = {};
+let stateSynchronised = false;
+let javascriptInjection = new Set();
+
+(async () => {
+  const { enabled, rules } = state;
+  const hasRules = await chrome.runtime.sendMessage({ action: 'has-rules', rules });
+  if (enabled) {
+    if (!hasRules) {
+      await addRulesAsync();
+    } else {
+      injectPageScript();
+      await loadHTMLAsync();
+      stateSynchronised = true;
+    }
+  } else if (hasRules) {
+    await removeRulesAsync();
+  } else {
+    stateSynchronised = true;
+  }
+})();
 
 let timeout = null;
 function debounce() {
@@ -71,10 +85,8 @@ function onMessage(message, sender, sendResponse) {
     if (action === 'ping') {
       sendResponse(state);
     } else if (action === 'set-state') {
-      const { enabled, port, path } = data;
-      Object.assign(state, { enabled, port, path });
-      sessionStorage.setItem(key, JSON.stringify(state));
-      location.reload();
+      const { port, path, enabled } = data;
+      setState(port, path, enabled);
       sendResponse();
     } else if (action === 'add-request') {
       const { requestId } = data;
@@ -93,12 +105,21 @@ function onMessage(message, sender, sendResponse) {
   }
 }
 
+function setState(port, path, enabled) {
+  const rules = state.rules.map((rule) => {
+    rule.action.redirect.transform.port = `${port}`;
+    return rule;
+  });
+  Object.assign(state, { port, path, enabled, rules });
+  sessionStorage.setItem(key, JSON.stringify(state));
+  location.reload();
+}
+
 async function loadHTMLAsync() {
-  const { port, path } = state;
   const src = location.pathname;
   const accept = 'text/html';
   try {
-    const response = await fetchAsync({ accept, src, port, path });
+    const response = await fetchAsync({ accept, src });
     filterHTML(response);
   } catch (error) {
     alert(`${error}: ${src}`);
@@ -162,9 +183,8 @@ function filterScripts(html, container) {
       element.type = 'module';
       container.appendChild(element);
     } else {
-      const { port, path } = state;
       try {
-        const response = await fetchAsync({ src, port, path });
+        const response = await fetchAsync({ src });
         injectJavascript(src, response);
       } catch (error) {
         alert(`${error}: ${src}`);
@@ -188,8 +208,10 @@ function injectJavascript(src, javascript) {
   window.postMessage({ action: 'eval', src, javascript }, location.origin);
 }
 
-async function fetchAsync({ accept, src, port, path }) {
-  const response = await chrome.runtime.sendMessage({ action: 'fetch', accept, src, port, path });
+async function fetchAsync({ accept, src }) {
+  const { port, path } = state;
+  const url = new URL(src, `http://localhost:${port}${path}`);
+  const response = await chrome.runtime.sendMessage({ action: 'fetch', accept, url });
   if (chrome.runtime.lastError) {
     const { message } = chrome.runtime.lastError;
     throw message;
@@ -199,4 +221,17 @@ async function fetchAsync({ accept, src, port, path }) {
     throw message;
   }
   return response;
+}
+
+async function addRulesAsync() {
+  const rules = await chrome.runtime.sendMessage({ action: 'add-rules', rules: state.rules });
+  Object.assign(state, { rules });
+  sessionStorage.setItem(key, JSON.stringify(state));
+  location.reload();
+}
+
+async function removeRulesAsync() {
+  const { rules } = state;
+  await chrome.runtime.sendMessage({ action: 'remove-rules', rules });
+  location.reload();
 }
