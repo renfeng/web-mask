@@ -5,7 +5,7 @@ See also [chrome-web-store/README.md](chrome-web-store/README.md)
 ## Build
 
 ```shell
-${base}/bin/build.sh
+bin/build.sh
 ```
 
 ## Install and run
@@ -18,6 +18,18 @@ ${base}/bin/build.sh
 ## Uninstall or disable
 
 When done you can uninstall the plugin, or disable it under `chrome://extensions`
+
+## Test automation
+
+```shell
+bin/run-vuejs.sh
+bin/test.sh
+bin/kill-vuejs.sh
+```
+
+See also
+* [test/specs/vuejs.e2e.js](test/specs/vuejs.e2e.js)
+* [template-wdio.conf.js](template-wdio.conf.js)
 
 ## Troubleshooting: redirect doesn't work
 

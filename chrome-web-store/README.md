@@ -7,16 +7,28 @@ It enables you to
 - Debug a remote web site, for which source map is usually disabled, with your local web server
 - Test your local changes with actual data from remote servers - integration test before pull request
 
-Tested with (in alphabetic order)
-* https://angular.io/ - https://github.com/angular/angular
-* https://reactjs.org/ - https://github.com/reactjs/reactjs.org
-* https://vuejs.org/ - https://github.com/vuejs/docs
+The idea and its implementation are based on HTTP and HTML. They are independent to the above frameworks, and SHOULD work for all web technologies. Unknown issue:
+* `content-security-policy` from a target website, e.g. https://material.angular.io/
+* How a javascript library renders content, e.g. reactjs
+* Service worker. See screenshots for instruction.
 
-The idea and its implementation are based on HTTP and HTML. They are independent to the above frameworks, and work for all web technologies.
-
-It's similar to "Resource Override", but requires a minimum configuration and is built for Manifest V3. See
+It's similar to "Resource Override", but it requires a minimum configuration, it is built for Manifest V3, and it is test automation friendly. See
 * https://chrome.google.com/webstore/detail/resource-override/pkoacgokdfckfpndoffpifphamojphii
 * https://developer.chrome.com/docs/extensions/mv3/mv2-sunset/
+
+Tests (in alphabetic order)
+* Successful. Manual.
+  * Target website: https://angular.io/
+  * Source code: https://github.com/angular/angular
+* Failed. `Refused to load the script '<URL>' because it violates the following Content Security Policy directive: "script-src 'self' 'unsafe-inline' 'unsafe-eval' <URL> <URL>". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback.`
+  * Target website: https://material.angular.io/
+  * Source code: https://github.com/angular/material.angular.io
+* Failing. Work in progress...
+  * Target website: https://reactjs.org/
+  * Source code: https://github.com/reactjs/reactjs.org
+* Successful. Automation.
+  * Target website: https://vuejs.org/
+  * Source code: https://github.com/vuejs/docs
 
 ## Category
 
@@ -37,6 +49,14 @@ English (United Kingdom)
 ![Resources overridden 1280x800](3-enabled.png)
 ![Working with service worker enabled websites 1280x800](4-redirect-bypassing-service-worker.png)
 
+## Homepage URL
+
+https://github.com/renfeng/web-mask
+
+## Support URL
+
+https://github.com/renfeng/web-mask
+
 # Privacy practices
 
 ## Single Purpose Description
@@ -47,10 +67,9 @@ It overrides resources, JS, CSS, Image, and fonts, of a website with the copies 
 
 Redirect HTTP requests for javascript, css, image, ... files to local web server.
 
-## storage justification
+## webRequest justification
 
-Manifest v3 "... service worker will ... get terminated repeatedly throughout a user's browser session ... treating the Storage APIs as our source of truth"
-https://developer.chrome.com/docs/extensions/mv3/migrating_to_service_workers/#state
+Detect network idle, similar to https://pptr.dev/api/puppeteer.page.waitfornetworkidle/
 
 ## Host permission justification
 
