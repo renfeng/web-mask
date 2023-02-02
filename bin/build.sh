@@ -6,7 +6,7 @@ basedir="$(dirname "$0")/.."
 target="${basedir}/dist/public"
 
 mkdir -p "${target}"
-cp -r "${basedir}/src/vanilla/." "${target}"
+rsync --exclude=*.test.mjs -r "${basedir}/src/vanilla/." "${target}"
 
 "${basedir}/bin/version.sh" >"${target}/version.txt"
 
