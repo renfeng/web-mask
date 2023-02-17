@@ -118,11 +118,9 @@ function setState(port, path, enabled) {
 async function loadHTMLAsync() {
   const src = location.pathname;
   const accept = 'text/html';
-  try {
-    const response = await fetchAsync({ accept, src });
+  const response = await fetchAsync({ accept, src });
+  if (response) {
     filterHTML(response);
-  } catch (error) {
-    alert(`${error}: ${src}`);
   }
 }
 
@@ -183,11 +181,9 @@ function filterScripts(html, container) {
       element.type = 'module';
       container.appendChild(element);
     } else {
-      try {
-        const response = await fetchAsync({ src });
+      const response = await fetchAsync({ src });
+      if (response) {
         injectJavascript(src, response);
-      } catch (error) {
-        alert(`${error}: ${src}`);
       }
     }
   });
@@ -214,11 +210,13 @@ async function fetchAsync({ accept, src }) {
   const response = await chrome.runtime.sendMessage({ action: 'fetch', accept, url });
   if (chrome.runtime.lastError) {
     const { message } = chrome.runtime.lastError;
-    throw message;
+    console.error(`${message}: ${url}`);
+    return null;
   }
   if (response?.error) {
     const { message } = response.error;
-    throw message;
+    console.error(`${message}: ${url}`);
+    return null;
   }
   return response;
 }
