@@ -19,6 +19,7 @@ if command -v cygpath; then
 else
   cp template-wdio.conf.js wdio.conf.js
 fi
+npm i
 npm run wdio || true
 
 echo TODO bin/kill-angular.sh
