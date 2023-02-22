@@ -174,11 +174,18 @@ function filterScripts(html, container) {
       return;
     }
 
+    const element = document.createElement('script');
+
+    if (/\bdefer\b/.test(script)) {
+      element.defer = "defer";
+    }
+
     const type = script.match(/(?<=type=")(?<type>[^"]+)(?=")/)?.groups['type'];
-    if (type === 'module') {
-      const element = document.createElement('script');
-      element.src = src;
+    if (type === 'module' || src === 'styles.js') {
+      const { port, path } = state;
+      element.src = new URL(src, `http://localhost:${port}${path}`);
       element.type = 'module';
+
       container.appendChild(element);
     } else {
       const response = await fetchAsync({ src });
