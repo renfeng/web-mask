@@ -1,37 +1,38 @@
 chrome.runtime.onMessage.addListener(onMessage);
 
 const filter = { urls: ['<all_urls>'] };
-chrome.webRequest.onBeforeRequest.addListener((details) => countRequestsAsync({ action: 'add-request', ...details }), filter);
-chrome.webRequest.onBeforeRedirect.addListener((details) => countRequestsAsync({ action: 'remove-request', ...details }), filter);
-chrome.webRequest.onCompleted.addListener((details) => countRequestsAsync({ action: 'remove-request', ...details }), filter);
-chrome.webRequest.onErrorOccurred.addListener((details) => countRequestsAsync({ action: 'remove-request', ...details }), filter);
+chrome.webRequest.onBeforeRequest.addListener((details) => countRequestsAsync({ action: 'add-request', details }), filter);
+chrome.webRequest.onBeforeRedirect.addListener((details) => countRequestsAsync({ action: 'remove-request', details }), filter);
+chrome.webRequest.onCompleted.addListener((details) => countRequestsAsync({ action: 'remove-request', details }), filter);
+chrome.webRequest.onErrorOccurred.addListener((details) => countRequestsAsync({ action: 'remove-request', details }), filter);
 
 function onMessage(message, sender, sendResponse) {
   console.debug(`message received: ${JSON.stringify(message, null, 2)}, ${JSON.stringify(sender)}`);
   const tab = sender.tab || message.tab;
   const { id: tabId } = tab;
   const { action, ...data } = message;
+  if (['ping', 'set-state'].includes(action)) {
+    forwardMessageAsync(tabId, message, sendResponse);
+  } else if (action === 'fetch') {
+    const { accept, url } = data;
+    fetchAsync({ accept, url }, sendResponse);
+  } else if (action === 'has-rules') {
+    const { rules } = data;
+    hasRulesAsync(tabId, rules, sendResponse);
+  } else if (action === 'add-rules') {
+    const { rules } = data;
+    addRulesAsync(tabId, rules, sendResponse);
+  } else if (action === 'remove-rules') {
+    const { rules } = data;
+    removeRulesAsync(tabId, rules, sendResponse);
+  }
+  return true;
+}
+
+async function forwardMessageAsync(tabId, message, sendResponse) {
   try {
-    if (['ping', 'set-state'].includes(action)) {
-      chrome.tabs.sendMessage(tabId, message, sendResponse);
-      return true;
-    } else if (action === 'fetch') {
-      const { accept, url } = data;
-      fetchAsync({ accept, url }, sendResponse);
-      return true;
-    } else if (action === 'has-rules') {
-      const { rules } = data;
-      hasRulesAsync(tabId, rules, sendResponse);
-      return true;
-    } else if (action === 'add-rules') {
-      const { rules } = data;
-      addRulesAsync(tabId, rules, sendResponse);
-      return true;
-    } else if (action === 'remove-rules') {
-      const { rules } = data;
-      removeRulesAsync(tabId, rules, sendResponse);
-      return true;
-    }
+    const response = await chrome.tabs.sendMessage(tabId, message);
+    sendResponse(response);
   } catch (error) {
     const { message, stack } = error;
     sendResponse({ error: { message, stack } });
@@ -104,8 +105,8 @@ function setIcon(tabId, enabled) {
   chrome.action.setIcon({ path: enabled ? 'disabled-icon128.png' : 'icon128.png', tabId });
 }
 
-async function countRequestsAsync({ action, ...data }) {
-  const { tabId, requestId, url } = data;
+async function countRequestsAsync({ action, details }) {
+  const { tabId, requestId, url } = details;
   if (tabId === -1) {
     return;
   }

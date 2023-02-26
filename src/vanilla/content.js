@@ -8,7 +8,7 @@ window.addEventListener('message', (event) => {
 });
 
 const observer = new MutationObserver((mutationList, observer) => {
-  console.log('Mutation', mutationList, observer);
+  console.debug('Mutation', mutationList, observer);
   debounce();
 });
 observer.observe(document.body, { attributes: true, childList: true, subtree: true });
@@ -29,6 +29,21 @@ const state = JSON.parse(sessionStorage.getItem(key)) || {
       condition: {
         regexFilter: `^${location.origin}/.*`,
         resourceTypes: ['script', 'stylesheet', 'image', 'font'],
+      },
+    },
+    {
+      action: {
+        type: 'modifyHeaders',
+        responseHeaders: [
+          {
+            header: 'Content-Security-Policy',
+            operation: 'remove',
+          },
+        ],
+      },
+      condition: {
+        regexFilter: `^${location.origin}/.*`,
+        resourceTypes: ['main_frame'],
       },
     },
   ],
@@ -107,7 +122,9 @@ function onMessage(message, sender, sendResponse) {
 
 function setState(port, path, enabled) {
   const rules = state.rules.map((rule) => {
-    rule.action.redirect.transform.port = `${port}`;
+    if (rule.action.redirect) {
+      rule.action.redirect.transform.port = `${port}`;
+    }
     return rule;
   });
   Object.assign(state, { port, path, enabled, rules });
@@ -174,17 +191,15 @@ function filterScripts(html, container) {
       return;
     }
 
-    const element = document.createElement('script');
-
-    if (/\bdefer\b/.test(script)) {
-      element.defer = "defer";
-    }
-
     const type = script.match(/(?<=type=")(?<type>[^"]+)(?=")/)?.groups['type'];
-    if (type === 'module' || src === 'styles.js') {
-      const { port, path } = state;
-      element.src = new URL(src, `http://localhost:${port}${path}`);
+    if (type === 'module') {
+      const element = document.createElement('script');
+      element.src = src;
       element.type = 'module';
+
+      if (/\bdefer\b/.test(script)) {
+        element.defer = 'defer';
+      }
 
       container.appendChild(element);
     } else {
@@ -214,18 +229,17 @@ function injectJavascript(src, javascript) {
 async function fetchAsync({ accept, src }) {
   const { port, path } = state;
   const url = new URL(src, `http://localhost:${port}${path}`);
-  const response = await chrome.runtime.sendMessage({ action: 'fetch', accept, url });
-  if (chrome.runtime.lastError) {
-    const { message } = chrome.runtime.lastError;
-    console.error(`${message}: ${url}`);
+  try {
+    const response = await chrome.runtime.sendMessage({ action: 'fetch', accept, url });
+    if (response?.error) {
+      console.error(url, response?.error);
+      return null;
+    }
+    return response;
+  } catch (error) {
+    console.error(url, error);
     return null;
   }
-  if (response?.error) {
-    const { message } = response.error;
-    console.error(`${message}: ${url}`);
-    return null;
-  }
-  return response;
 }
 
 async function addRulesAsync() {

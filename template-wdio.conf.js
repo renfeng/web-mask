@@ -62,7 +62,7 @@ export const config = {
         args: [
           '--auto-open-devtools-for-tabs',
           '--load-extension=dist/public',
-          // '--headless=chrome',
+          // '--headless',
           '--disable-gpu',
         ],
       },

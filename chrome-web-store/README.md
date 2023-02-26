@@ -7,8 +7,7 @@ It enables you to
 - Debug a remote web site, for which source map is usually disabled, with your local web server
 - Test your local changes with actual data from remote servers - integration test before pull request
 
-The idea and its implementation are based on HTTP and HTML. They are independent to the above frameworks, and SHOULD work for all web technologies. Unknown issue:
-* `content-security-policy` from a target website, e.g. https://material.angular.io/
+The idea and its implementation are based on HTTP and HTML. They are independent to the above frameworks, and SHOULD work for all web technologies. Known issue:
 * How a javascript library renders content, e.g. reactjs
 * Service worker. See screenshots for instruction.
 

@@ -14,8 +14,9 @@ src=$(cat src/index.md)
 # see also test/specs/vuejs.e2e.js
 echo >src/index.md "${src/Vue.js - The Progressive JavaScript Framework/Web Mask is on!}"
 pnpm i
-pnpm run dev &
-
-while ! curl >/dev/null -s http://localhost:${port}/; do
-  sleep 1
-done
+# pnpm run dev &
+#
+# while ! curl >/dev/null -s http://localhost:${port}/; do
+#   sleep 1
+# done
+pnpm run dev
