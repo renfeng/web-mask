@@ -29,6 +29,7 @@ bin/kill-vuejs.sh
 
 See also
 * [test/specs/vuejs.e2e.js](test/specs/vuejs.e2e.js)
+* [test/specs/angular.e2e.js](test/specs/angular.e2e.js)
 * [template-wdio.conf.js](template-wdio.conf.js)
 
 ## Troubleshooting: redirect doesn't work

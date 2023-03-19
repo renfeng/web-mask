@@ -1,7 +1,7 @@
 chrome.runtime.onMessage.addListener(onMessage);
 
 window.addEventListener('message', (event) => {
-  console.log('message received', event.data);
+  console.debug('message received', event.data);
   if (event.data.action === 'complete-javascript-injection') {
     javascriptInjection.delete(event.data.src);
   }
@@ -183,32 +183,36 @@ function filterLinks(html, container) {
   });
 }
 
-function filterScripts(html, container) {
+async function filterScripts(html, container) {
   removeElement(container, 'script', 'src');
-  html.match(/<script\b.*?><\/script>/g)?.forEach(async (script) => {
-    const src = script.match(/(?<=src=")(?<src>[^"]+)(?=")/)?.groups['src'];
-    if (!src) {
-      return;
-    }
+  await Promise.all(
+    html.match(/<script\b.*?><\/script>/g)?.map(
+      (script) =>
+        new Promise(async (resolve, reject) => {
+          const src = script.match(/(?<=src=")(?<src>[^"]+)(?=")/)?.groups['src'];
+          if (!src) {
+            return;
+          }
 
-    const type = script.match(/(?<=type=")(?<type>[^"]+)(?=")/)?.groups['type'];
-    if (type === 'module') {
-      const element = document.createElement('script');
-      element.src = src;
-      element.type = 'module';
+          const type = script.match(/(?<=type=")(?<type>[^"]+)(?=")/)?.groups['type'];
+          if (type === 'module') {
+            const element = document.createElement('script');
+            container.appendChild(element);
 
-      if (/\bdefer\b/.test(script)) {
-        element.defer = 'defer';
-      }
+            element.onload = resolve;
+            element.onerror = reject;
 
-      container.appendChild(element);
-    } else {
-      const response = await fetchAsync({ src });
-      if (response) {
-        injectJavascript(src, response);
-      }
-    }
-  });
+            element.type = 'module';
+            element.src = src;
+          } else {
+            const response = await fetchAsync({ src });
+            if (response) {
+              injectJavascript(src, response);
+            }
+          }
+        })
+    )
+  );
 }
 
 function removeElement(container, element, attribute) {

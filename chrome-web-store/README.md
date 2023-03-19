@@ -19,13 +19,13 @@ Tests (in alphabetic order)
 * Successful. Manual.
   * Target website: https://angular.io/
   * Source code: https://github.com/angular/angular
-* Failed. `Refused to load the script '<URL>' because it violates the following Content Security Policy directive: "script-src 'self' 'unsafe-inline' 'unsafe-eval' <URL> <URL>". Note that 'script-src-elem' was not explicitly set, so 'script-src' is used as a fallback.`
+* Successful. Automated.
   * Target website: https://material.angular.io/
   * Source code: https://github.com/angular/material.angular.io
 * Failing. Work in progress...
   * Target website: https://reactjs.org/
   * Source code: https://github.com/reactjs/reactjs.org
-* Successful. Automation.
+* Successful. Automated.
   * Target website: https://vuejs.org/
   * Source code: https://github.com/vuejs/docs
 
