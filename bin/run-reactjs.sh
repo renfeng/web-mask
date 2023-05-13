@@ -10,11 +10,12 @@ if [ ! -e ${target} ]; then
   git clone ${repo} ${target}
 fi
 cd ${target}
-src=$(cat src/pages/index.js)
-echo >src/pages/index.js "${src/React &ndash; A JavaScript library for building user interfaces/Web Mask is on!}"
+src=$(cat src/content/index.md)
+echo >src/content/index.md "${src/React – The library for web and native user interfaces/Web Mask is on!}"
 yarn
-yarn dev &
-
-while ! curl >/dev/null -s http://localhost:${port}/; do
-  sleep 1
-done
+#yarn dev &
+#
+#while ! curl >/dev/null -s http://localhost:${port}/; do
+#  sleep 1
+#done
+yarn dev

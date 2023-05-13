@@ -137,7 +137,7 @@ async function loadHTMLAsync() {
   const accept = 'text/html';
   const response = await fetchAsync({ accept, src });
   if (response) {
-    filterHTML(response);
+    await filterHTMLAsync(response);
   }
 }
 
@@ -148,81 +148,60 @@ function injectPageScript() {
   document.head.appendChild(script);
 }
 
-function filterHTML(html) {
-  filter(html.match(/<head\b.*<[/]head>/s)[0], document.head);
-  filter(html.match(/<body\b.*<[/]body>/s)[0], document.body);
+async function filterHTMLAsync(html) {
+  const headMatch = html.match(/(?<=<head(?<attributes>(?:\s+\S+="[^"]+")*>)).*(?=<[/]head>)/s);
+  const bodyMatch = html.match(/(?<=<body(?<attributes>(?:\s+\S+="[^"]+")*>)).*(?=<[/]body>)/s);
+
+  document.head.innerHTML = headMatch[0];
+  document.body.innerHTML = bodyMatch[0];
+
+  const scriptPromises = [];
+  activateScript(document.head, scriptPromises);
+  activateScript(document.body, scriptPromises);
+  await Promise.all(scriptPromises);
 }
 
-function filter(html, container) {
-  filterLinks(html, container);
-  filterScripts(html, container);
-}
-
-function filterLinks(html, container) {
-  removeElement(container, 'link', 'href');
-  html.match(/<link\b.*?>/g)?.forEach((link) => {
-    const href = link.match(/(?<=href=")(?<href>[^"]+)(?=")/)?.groups['href'];
-    if (!href) {
-      return;
-    }
-
-    const element = document.createElement('link');
-    element.href = href;
-
-    const type = link.match(/(?<=type=")(?<type>[^"]+)(?=")/)?.groups['type'];
-    if (type) {
-      element.type = type;
-    }
-
-    const rel = link.match(/(?<=rel=")(?<rel>[^"]+)(?=")/)?.groups['rel'];
-    if (rel) {
-      element.rel = rel;
-    }
-
-    container.appendChild(element);
-  });
-}
-
-async function filterScripts(html, container) {
-  removeElement(container, 'script', 'src');
-  await Promise.all(
-    html.match(/<script\b.*?><\/script>/g)?.map(
-      (script) =>
-        new Promise(async (resolve, reject) => {
-          const src = script.match(/(?<=src=")(?<src>[^"]+)(?=")/)?.groups['src'];
-          if (!src) {
-            return;
-          }
-
-          const type = script.match(/(?<=type=")(?<type>[^"]+)(?=")/)?.groups['type'];
-          if (type === 'module') {
-            const element = document.createElement('script');
-            container.appendChild(element);
-
-            element.onload = resolve;
-            element.onerror = reject;
-
-            element.type = 'module';
-            element.src = src;
-          } else {
-            const response = await fetchAsync({ src });
-            if (response) {
-              injectJavascript(src, response);
-            }
-          }
+async function activateScript(node, scriptPromises) {
+  if (isScript(node)) {
+    if (node.type === 'module' || !['', 'text/javascript'].includes(node.type)) {
+      const script = cloneScript(node);
+      scriptPromises.push(
+        new Promise((resolve, reject) => {
+          script.onload = resolve;
+          script.onerror = reject;
         })
-    )
-  );
+      );
+      node.parentNode.replaceChild(script, node);
+    } else if (node.innerHTML) {
+      const src = crypto.randomUUID();
+      const script = node.innerHTML;
+      injectJavascript(src, script);
+    } else {
+      const src = node.src;
+      const script = await fetchAsync({ src });
+      if (script) {
+        injectJavascript(src, script);
+      }
+    }
+  } else {
+    for (const child of node.childNodes) {
+      activateScript(child, scriptPromises);
+    }
+  }
+
+  return node;
+}
+function cloneScript(node) {
+  var script = document.createElement('script');
+  script.innerHTML = node.innerHTML;
+  for (const attr of node.attributes) {
+    script.setAttribute(attr.name, attr.value);
+  }
+  return script;
 }
 
-function removeElement(container, element, attribute) {
-  [...container.querySelectorAll(`${element}[${attribute}]`)]
-    .filter((node) => isSameOrigin(node[attribute]))
-    .forEach((node) => node.remove());
-}
-
-function isSameOrigin(url) {
-  return new URL(url).origin === location.origin;
+function isScript(node) {
+  return node.tagName === 'SCRIPT';
 }
 
 function injectJavascript(src, javascript) {
@@ -232,7 +211,7 @@ function injectJavascript(src, javascript) {
 
 async function fetchAsync({ accept, src }) {
   const { port, path } = state;
-  const url = new URL(src, `http://localhost:${port}${path}`);
+  const url = `${new URL(src, `http://localhost:${port}${path}`)}`;
   try {
     const response = await chrome.runtime.sendMessage({ action: 'fetch', accept, url });
     if (response?.error) {
