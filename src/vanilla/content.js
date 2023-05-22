@@ -1,12 +1,5 @@
 chrome.runtime.onMessage.addListener(onMessage);
 
-window.addEventListener('message', (event) => {
-  console.debug('message received', event.data);
-  if (event.data.action === 'complete-javascript-injection') {
-    javascriptInjection.delete(event.data.src);
-  }
-});
-
 const observer = new MutationObserver((mutationList, observer) => {
   console.debug('Mutation', mutationList, observer);
   debounce();
@@ -31,27 +24,12 @@ const state = JSON.parse(sessionStorage.getItem(key)) || {
         resourceTypes: ['script', 'stylesheet', 'image', 'font'],
       },
     },
-    {
-      action: {
-        type: 'modifyHeaders',
-        responseHeaders: [
-          {
-            header: 'Content-Security-Policy',
-            operation: 'remove',
-          },
-        ],
-      },
-      condition: {
-        regexFilter: `^${location.origin}/.*`,
-        resourceTypes: ['main_frame'],
-      },
-    },
   ],
 };
 
 let requests = {};
 let stateSynchronised = false;
-let javascriptInjection = new Set();
+let javascriptInjection = false;
 
 (async () => {
   const { enabled, rules } = state;
@@ -60,7 +38,6 @@ let javascriptInjection = new Set();
     if (!hasRules) {
       await addRulesAsync();
     } else {
-      injectPageScript();
       await loadHTMLAsync();
       stateSynchronised = true;
     }
@@ -83,8 +60,8 @@ function debounce() {
       setTimeout(debounce, 100);
       return;
     }
-    if (javascriptInjection.size > 0) {
-      console.log('Pending on javascript...', javascriptInjection);
+    if (javascriptInjection) {
+      console.log('Pending on javascript...');
       setTimeout(debounce, 100);
       return;
     }
@@ -141,11 +118,16 @@ async function loadHTMLAsync() {
   }
 }
 
-function injectPageScript() {
+async function injectPageScriptAsync() {
   const script = document.createElement('script');
+  const promise = new Promise((resolve, reject) => {
+    script.addEventListener('load', resolve);
+    script.addEventListener('error', reject);
+  });
   script.setAttribute('type', 'text/javascript');
   script.setAttribute('src', chrome.runtime.getURL('page.js'));
   document.head.appendChild(script);
+  return promise;
 }
 
 async function filterHTMLAsync(html) {
@@ -155,58 +137,20 @@ async function filterHTMLAsync(html) {
   document.head.innerHTML = headMatch[0];
   document.body.innerHTML = bodyMatch[0];
 
-  const scriptPromises = [];
-  activateScript(document.head, scriptPromises);
-  activateScript(document.body, scriptPromises);
-  await Promise.all(scriptPromises);
+  const event = await injectPageScriptAsync();
+
+  await activateScriptAsync(event.target.src);
 }
 
-async function activateScript(node, scriptPromises) {
-  if (isScript(node)) {
-    if (node.type === 'module' || !['', 'text/javascript'].includes(node.type)) {
-      const script = cloneScript(node);
-      scriptPromises.push(
-        new Promise((resolve, reject) => {
-          script.onload = resolve;
-          script.onerror = reject;
-        })
-      );
-      node.parentNode.replaceChild(script, node);
-    } else if (node.innerHTML) {
-      const src = crypto.randomUUID();
-      const script = node.innerHTML;
-      injectJavascript(src, script);
-    } else {
-      const src = node.src;
-      const script = await fetchAsync({ src });
-      if (script) {
-        injectJavascript(src, script);
-      }
+async function activateScriptAsync(exclude) {
+  javascriptInjection = true;
+  window.addEventListener('message', (event) => {
+    console.debug('message received', event.data);
+    if (event.data.action === 'complete-javascript-injection') {
+      javascriptInjection = false;
     }
-  } else {
-    for (const child of node.childNodes) {
-      activateScript(child, scriptPromises);
-    }
-  }
-
-  return node;
-}
-function cloneScript(node) {
-  var script = document.createElement('script');
-  script.innerHTML = node.innerHTML;
-  for (const attr of node.attributes) {
-    script.setAttribute(attr.name, attr.value);
-  }
-  return script;
-}
-
-function isScript(node) {
-  return node.tagName === 'SCRIPT';
-}
-
-function injectJavascript(src, javascript) {
-  javascriptInjection.add(src);
-  window.postMessage({ action: 'eval', src, javascript }, location.origin);
+  });
+  window.postMessage({ action: 'activate-script', exclude }, location.origin);
 }
 
 async function fetchAsync({ accept, src }) {

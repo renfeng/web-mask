@@ -1,18 +1,48 @@
-window.addEventListener('message', async (event) => {
-  console.debug('message received', event.data);
-  if (event.data.action === 'eval') {
-    const { src, javascript } = event.data;
-    try {
-      if (javascript.match(/\bimport.meta\b/)) {
-        const blob = new Blob([javascript], { type: 'text/javascript' });
-        const url = URL.createObjectURL(blob);
-        await import(url);
-        URL.revokeObjectURL(url);
-      } else {
-        eval(javascript);
+(() => {
+  window.addEventListener('message', async (event) => {
+    console.debug('message received', event.data);
+    if (event.data.action === 'activate-script') {
+      const scriptPromises = [];
+      activateScript(document.head, event.data.exclude, scriptPromises);
+      activateScript(document.body, event.data.exclude, scriptPromises);
+      await Promise.all(scriptPromises);
+      window.postMessage({ action: 'complete-javascript-injection' }, location.origin);
+    }
+  });
+
+  async function activateScript(node, exclude, scriptPromises) {
+    if (isScript(node)) {
+      if (node.src === exclude) {
+        return;
       }
-    } finally {
-      window.postMessage({ action: 'complete-javascript-injection', src }, location.origin);
+      const script = cloneScript(node);
+      if (script.src) {
+        scriptPromises.push(
+          new Promise((resolve, reject) => {
+            script.addEventListener('load', resolve);
+            script.addEventListener('error', reject);
+          })
+        );
+      }
+      console.info(script.outerHTML);
+      node.parentNode.replaceChild(script, node);
+    } else {
+      for (const child of node.childNodes) {
+        activateScript(child, exclude, scriptPromises);
+      }
     }
   }
-});
+
+  function cloneScript(node) {
+    var script = document.createElement('script');
+    script.innerHTML = node.innerHTML;
+    for (const attr of node.attributes) {
+      script.setAttribute(attr.name, attr.value);
+    }
+    return script;
+  }
+
+  function isScript(node) {
+    return node.tagName === 'SCRIPT';
+  }
+})();
