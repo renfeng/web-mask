@@ -4,7 +4,7 @@ set -e
 
 repo=https://github.com/reactjs/reactjs.org
 target=../reactjs.org
-port=8000
+#port=8000
 
 if [ ! -e ${target} ]; then
   git clone ${repo} ${target}
