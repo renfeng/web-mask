@@ -24,6 +24,21 @@ const state = JSON.parse(sessionStorage.getItem(key)) || {
         resourceTypes: ['script', 'stylesheet', 'image', 'font'],
       },
     },
+    {
+      action: {
+        type: 'modifyHeaders',
+        responseHeaders: [
+          {
+            header: 'Content-Security-Policy',
+            operation: 'remove',
+          },
+        ],
+      },
+      condition: {
+        regexFilter: `^${location.origin}/.*`,
+        resourceTypes: ['main_frame'],
+      },
+    },
   ],
 };
 
