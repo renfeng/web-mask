@@ -4,14 +4,16 @@ set -e
 
 repo=https://github.com/reactjs/reactjs.org
 target=../reactjs.org
+file=src/content/index.md
 #port=8000
 
 if [ ! -e ${target} ]; then
   git clone ${repo} ${target}
 fi
 cd ${target}
-src=$(cat src/content/index.md)
-echo >src/content/index.md "${src/React – The library for web and native user interfaces/Web Mask is on!}"
+git pull
+src=$(cat ${file})
+echo >${file} "${src/React – The library for web and native user interfaces/Web Mask is on!}"
 yarn
 #yarn dev &
 #

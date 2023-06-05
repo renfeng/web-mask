@@ -4,15 +4,17 @@ set -e
 
 repo=https://github.com/vuejs/docs
 target=../vuejs-docs
+file=src/index.md
 #port=5173
 
 if [ ! -e ${target} ]; then
   git clone ${repo} ${target}
 fi
 cd ${target}
-src=$(cat src/index.md)
+git pull
+src=$(cat ${file})
 # see also test/specs/vuejs.e2e.js
-echo >src/index.md "${src/Vue.js - The Progressive JavaScript Framework/Web Mask is on!}"
+echo >${file} "${src/Vue.js - The Progressive JavaScript Framework/Web Mask is on!}"
 pnpm i
 # pnpm run dev &
 #
