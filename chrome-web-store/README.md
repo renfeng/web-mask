@@ -23,7 +23,7 @@ Tests (in alphabetic order)
 * Successful. Automated.
   * Target website: https://material.angular.io/
   * Source code: https://github.com/angular/material.angular.io
-* Not supported. The local web server doesn't include the HTTP response header, Access-Control-Allow-Origin:*
+* Successful. Manual.
   * Target website: https://reactjs.org/
   * Source code: https://github.com/reactjs/reactjs.org
 * Successful. Automated.
