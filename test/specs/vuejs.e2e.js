@@ -20,12 +20,10 @@ describe('Web Mask on vuejs', () => {
   ];
 
   before(async () => {
-    await browser.url('chrome://extensions/');
-    const webMaskExtensionId = await browser.execute(getExtentionId, 'Web Mask');
+    const webMaskKey = 'https://vuejs.org';
 
     await browser.url(url);
 
-    const webMaskKey = `chrome://extensions/?id=${webMaskExtensionId}`;
     await enableWebMaskAsync(webMaskKey, port, path, rules);
     await isWebMaskReadyAsync(webMaskKey);
   });
@@ -35,15 +33,6 @@ describe('Web Mask on vuejs', () => {
     expect(await browser.execute(() => document.title)).toBe('Web Mask is on! | Vue.js');
   });
 });
-
-function getExtentionId(name) {
-  return [
-    ...document
-      .querySelector('extensions-manager')
-      .shadowRoot.querySelector('extensions-item-list')
-      .shadowRoot.querySelectorAll('extensions-item'),
-  ].find((item) => item.shadowRoot.querySelector('#name').innerText === name)?.id;
-}
 
 async function enableWebMaskAsync(webMaskKey, port, path, rules) {
   await browser.execute(setStorage, webMaskKey, { port, path, enabled: true, rules });

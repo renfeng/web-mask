@@ -10,6 +10,7 @@ if [ ! -e ${target} ]; then
   git clone ${repo} ${target}
 fi
 cd ${target}
+git checkout main
 git pull
 src=$(cat ${file})
 # see also test/specs/vuejs.e2e.js

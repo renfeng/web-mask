@@ -7,28 +7,31 @@ It enables you to
 - Debug a remote web site, for which source map is usually disabled, with your local web server
 - Test your local changes with actual data from remote servers - integration test before pull request
 
-The idea and its implementation are based on HTTP and HTML web standards, independent to the framework of your choice, with the following constraints:
-* It doesn't work with `document.write()`
-* The local web server must include HTTP response header, Access-Control-Allow-Origin:*
-* "Bypass for network" for service workers. See screenshots for instruction.
+The idea and its implementation are based on HTTP and HTML web standards, independent to the framework of your choice,
+with the following constraints:
 
-It's similar to "Resource Override", but it requires a minimum configuration, it is built for Manifest V3, and it is test automation friendly. See
-* https://chrome.google.com/webstore/detail/resource-override/pkoacgokdfckfpndoffpifphamojphii
-* https://developer.chrome.com/docs/extensions/mv3/mv2-sunset/
+- It doesn't work with `document.write()`
+- The local web server must include HTTP response header, Access-Control-Allow-Origin:\*
+- "Bypass for network" for service workers. See screenshots for instruction.
+- Web socket is not redirected, i.e. Hot module reload (hmr) or live reload doesn't work unless you can force their origin to localhost
+
+It's similar to "Resource Override", but it requires a minimum configuration, it is built for Manifest V3, and it is
+test automation friendly. See
+
+- https://chrome.google.com/webstore/detail/resource-override/pkoacgokdfckfpndoffpifphamojphii
+- https://developer.chrome.com/docs/extensions/mv3/mv2-sunset/
 
 Tests (in alphabetic order)
-* Successful. Manual.
-  * Target website: https://angular.io/
-  * Source code: https://github.com/angular/angular
-* Successful. Automated.
-  * Target website: https://material.angular.io/
-  * Source code: https://github.com/angular/material.angular.io
-* Successful. Manual.
-  * Target website: https://reactjs.org/
-  * Source code: https://github.com/reactjs/reactjs.org
-* Successful. Automated.
-  * Target website: https://vuejs.org/
-  * Source code: https://github.com/vuejs/docs
+
+- An Angular website: https://material.angular.io/
+  - Source code: https://github.com/angular/material.angular.io
+  - Successful. Automated.
+- A React website: https://reactjs.org/
+  - Source code: https://github.com/reactjs/reactjs.org
+  - Successful. Manual.
+- A Vue.js website: https://vuejs.org/
+  - Source code: https://github.com/vuejs/docs
+  - Successful. Automated.
 
 ## Category
 

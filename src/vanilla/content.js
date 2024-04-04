@@ -6,7 +6,7 @@ const observer = new MutationObserver((mutationList, observer) => {
 });
 observer.observe(document.body, { attributes: true, childList: true, subtree: true });
 
-const key = `chrome://extensions/?id=${chrome.runtime.id}`;
+const key = location.origin;
 const state = JSON.parse(sessionStorage.getItem(key)) || {
   port: 0,
   path: '/',
@@ -32,11 +32,15 @@ const state = JSON.parse(sessionStorage.getItem(key)) || {
             header: 'Content-Security-Policy',
             operation: 'remove',
           },
+          {
+            header: 'Content-Security-Policy-Report-Only',
+            operation: 'remove',
+          },
         ],
       },
       condition: {
         regexFilter: `^${location.origin}/.*`,
-        resourceTypes: ['main_frame'],
+        resourceTypes: ['main_frame', 'sub_frame'],
       },
     },
   ],
@@ -72,12 +76,12 @@ function debounce() {
   timeout = setTimeout(() => {
     if (Object.keys(requests).length > 0) {
       console.log('Pending on requests...', requests);
-      setTimeout(debounce, 100);
+      debounce();
       return;
     }
     if (javascriptInjection) {
       console.log('Pending on javascript...');
-      setTimeout(debounce, 100);
+      debounce();
       return;
     }
     console.log('ready', new Date().toISOString(), document.title);
@@ -146,8 +150,8 @@ async function injectPageScriptAsync() {
 }
 
 async function filterHTMLAsync(html) {
-  const headMatch = html.match(/(?<=<head(?<attributes>(?:\s+\S+="[^"]+")*>)).*(?=<[/]head>)/s);
-  const bodyMatch = html.match(/(?<=<body(?<attributes>(?:\s+\S+="[^"]+")*>)).*(?=<[/]body>)/s);
+  const headMatch = html.match(/(?<=<head(?<attributes>(?:\s+\S+="[^"]+")*)>).*(?=<[/]head>)/s);
+  const bodyMatch = html.match(/(?<=<body(?<attributes>(?:\s+\S+="[^"]+")*)>).*(?=<[/]body>)/s);
 
   document.head.innerHTML = headMatch[0];
   document.body.innerHTML = bodyMatch[0];

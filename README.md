@@ -19,18 +19,36 @@ bin/build.sh
 
 When done you can uninstall the plugin, or disable it under `chrome://extensions`
 
-## Test automation
+## Test automation samples
 
-```shell
+<table>
+  <tr>
+    <th>Terminal 1</th>
+    <th>Terminal 2</th>
+    <th>Terminal 3</th>
+  </tr>
+  <tr>
+    <td>
+bin/run-angular.sh
+    </td>
+    <td>
 bin/run-vuejs.sh
+    </td>
+    <td>
 bin/test.sh
+
+bin/kill-angular.sh
+
 bin/kill-vuejs.sh
-```
+</td>
+  </tr>
+</table>
 
 See also
-* [test/specs/vuejs.e2e.js](test/specs/vuejs.e2e.js)
-* [test/specs/angular.e2e.js](test/specs/angular.e2e.js)
-* [template-wdio.conf.js](template-wdio.conf.js)
+
+- [test/specs/vuejs.e2e.js](test/specs/vuejs.e2e.js)
+- [test/specs/angular.e2e.js](test/specs/angular.e2e.js)
+- [template-wdio.conf.js](template-wdio.conf.js)
 
 ## Troubleshooting: redirect doesn't work
 
