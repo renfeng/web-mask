@@ -53,17 +53,19 @@ let javascriptInjection = false;
 (async () => {
   const { enabled, rules } = state;
   const hasRules = await chrome.runtime.sendMessage({ action: 'has-rules', rules });
-  if (enabled) {
-    if (!hasRules) {
-      await addRulesAsync();
-    } else {
+  if (hasRules) {
+    if (enabled) {
       await loadHTMLAsync();
       stateSynchronised = true;
+    } else {
+      await removeRulesAsync();
     }
-  } else if (hasRules) {
-    await removeRulesAsync();
   } else {
-    stateSynchronised = true;
+    if (enabled) {
+      await addRulesAsync();
+    } else {
+      stateSynchronised = true;
+    }
   }
 })();
 
