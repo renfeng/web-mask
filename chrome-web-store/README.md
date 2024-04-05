@@ -7,8 +7,7 @@ It enables you to
 - Debug a remote web site, for which source map is usually disabled, with your local web server
 - Test your local changes with actual data from remote servers - integration test before pull request
 
-The idea and its implementation are based on HTTP and HTML web standards, independent to the framework of your choice,
-with the following constraints:
+The idea and its implementation are based on HTTP and HTML web standards, independent to the framework of your choice, with the following constraints:
 
 - It doesn't work with `document.write()`
 - The local web server must include HTTP response header, Access-Control-Allow-Origin:\*
@@ -72,11 +71,11 @@ Redirect HTTP requests for javascript, css, image, ... files to local web server
 
 ## webRequest justification
 
-Detect network idle, similar to https://pptr.dev/api/puppeteer.page.waitfornetworkidle/
+Wait for network idle, similar to https://pptr.dev/api/puppeteer.page.waitfornetworkidle/
 
 ## Host permission justification
 
-Redirect HTTP requests for javascript, css, image, ... files to local web server.
+Redirect HTTP requests for javascript, css, image, and font files to local web server.
 
 ## Are you using remote code?
 
