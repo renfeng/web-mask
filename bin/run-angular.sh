@@ -13,6 +13,7 @@ cd ${target}
 git checkout main
 git pull
 src=$(cat ${file})
+# see also test/specs/angular.e2e.js
 echo >${file} "${src/Angular Material UI component library/Web Mask is on!}"
 
 npm install --global yarn

@@ -14,11 +14,11 @@ The idea and its implementation are based on HTTP and HTML web standards, indepe
 - "Bypass for network" for service workers. See screenshots for instruction.
 - Web socket is not redirected, i.e. Hot module reload (hmr) or live reload doesn't work unless you can force their origin to localhost
 
-It's similar to "Resource Override", but it requires a minimum configuration, it is built for Manifest V3, and it is
-test automation friendly. See
+It's similar to "Resource Override", but built for Manifest V3, and easy to integration into automated tests. See
 
-- https://chrome.google.com/webstore/detail/resource-override/pkoacgokdfckfpndoffpifphamojphii
-- https://developer.chrome.com/docs/extensions/mv3/mv2-sunset/
+- Resource Override, https://chrome.google.com/webstore/detail/resource-override/pkoacgokdfckfpndoffpifphamojphii
+- Manifest V2 support timeline, https://developer.chrome.com/docs/extensions/develop/migrate/mv2-deprecation-timeline
+- Test automation examples, https://github.com/renfeng/web-mask/tree/master/test/specs
 
 Tests (in alphabetic order)
 

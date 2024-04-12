@@ -1,8 +1,8 @@
 import { expect, $ } from '@wdio/globals';
 
-describe('Web Mask on angular', () => {
-  const url = 'https://material.angular.io/';
-  const port = 4200;
+describe('Web Mask on react', () => {
+  const url = 'https://react.dev/';
+  const port = 3000;
   const path = '/';
 
   // The following are DNR rules. The properties, `id` and `condition.tabIds`, will be added at runtime.
@@ -20,25 +20,10 @@ describe('Web Mask on angular', () => {
         resourceTypes: ['script', 'stylesheet', 'image', 'font'],
       },
     },
-    {
-      action: {
-        type: 'modifyHeaders',
-        responseHeaders: [
-          {
-            header: 'Content-Security-Policy',
-            operation: 'remove',
-          },
-        ],
-      },
-      condition: {
-        regexFilter: `^${new URL(url).origin}/.*`,
-        resourceTypes: ['main_frame'],
-      },
-    },
   ];
 
   before(async () => {
-    const webMaskKey = 'https://material.angular.io';
+    const webMaskKey = 'https://react.dev';
 
     await browser.url(url);
 
@@ -46,7 +31,7 @@ describe('Web Mask on angular', () => {
     await isWebMaskReadyAsync(webMaskKey);
   });
 
-  it('should work for angular', async () => {
+  it('should work for react', async () => {
     // See also bin/test.sh
     expect(await browser.execute(() => document.title)).toBe('Web Mask is on!');
   });

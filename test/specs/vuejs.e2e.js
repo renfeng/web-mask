@@ -4,6 +4,9 @@ describe('Web Mask on vuejs', () => {
   const url = 'https://vuejs.org/';
   const port = 5173;
   const path = '/';
+
+  // The following are DNR rules. The properties, `id` and `condition.tabIds`, will be added at runtime.
+  // See https://developer.chrome.com/docs/extensions/reference/api/declarativeNetRequest#build-rules
   const rules = [
     {
       action: {
