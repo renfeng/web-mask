@@ -27,7 +27,7 @@ Tests (in alphabetic order)
   - Successful. Automated.
 - A React website: https://reactjs.org/
   - Source code: https://github.com/reactjs/reactjs.org
-  - Successful. Manual.
+  - Successful. Automated.
 - A Vue.js website: https://vuejs.org/
   - Source code: https://github.com/vuejs/docs
   - Successful. Automated.

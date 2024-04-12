@@ -28,7 +28,6 @@ describe('Web Mask on react', () => {
     await browser.url(url);
 
     await enableWebMaskAsync(webMaskKey, port, path, rules);
-    await isWebMaskReadyAsync(webMaskKey);
   });
 
   it('should work for react', async () => {
@@ -44,15 +43,4 @@ async function enableWebMaskAsync(webMaskKey, port, path, rules) {
 
 function setStorage(key, value) {
   sessionStorage.setItem(key, JSON.stringify(value));
-}
-
-async function isWebMaskReadyAsync(webMaskKey) {
-  return browser.executeAsync((webMaskKey, done) => {
-    window.addEventListener('message', (event) => {
-      const { action, key } = event.data;
-      if (action === 'ready' && key === webMaskKey) {
-        done();
-      }
-    });
-  }, webMaskKey);
 }
