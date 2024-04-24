@@ -10,7 +10,6 @@ It enables you to
 The idea and its implementation are based on HTTP and HTML web standards, independent to the framework of your choice, with the following constraints:
 
 - It doesn't work with `document.write()`
-- The local web server must include HTTP response header, Access-Control-Allow-Origin:\*
 - "Bypass for network" for service workers. See screenshots for instruction.
 - Web socket is not redirected, i.e. Hot module reload (hmr) or live reload doesn't work unless you can force their origin to localhost
 

@@ -20,6 +20,22 @@ describe('Web Mask on react', () => {
         resourceTypes: ['script', 'stylesheet', 'image', 'font'],
       },
     },
+    {
+      action: {
+        type: 'modifyHeaders',
+        responseHeaders: [
+          {
+            header: 'Access-Control-Allow-Origin',
+            value: '*',
+            operation: 'set',
+          },
+        ],
+      },
+      condition: {
+        regexFilter: `^${new URL(url).origin}/.*`,
+        resourceTypes: ['main_frame'],
+      },
+    },
   ];
 
   before(async () => {
@@ -32,7 +48,12 @@ describe('Web Mask on react', () => {
 
   it('should work for react', async () => {
     // See also bin/test.sh
-    expect(await browser.execute(() => document.title)).toBe('Web Mask is on!');
+    await browser.waitUntil(
+      async () => {
+        return (await browser.execute(() => document.title)) === 'Web Mask is on!';
+      },
+      { timeout: 10000 }
+    );
   });
 });
 

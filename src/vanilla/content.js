@@ -36,6 +36,11 @@ const state = JSON.parse(sessionStorage.getItem(key)) || {
             header: 'Content-Security-Policy-Report-Only',
             operation: 'remove',
           },
+          {
+            header: 'Access-Control-Allow-Origin',
+            value: '*',
+            operation: 'set',
+          },
         ],
       },
       condition: {
