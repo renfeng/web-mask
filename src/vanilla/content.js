@@ -36,11 +36,6 @@ const state = JSON.parse(sessionStorage.getItem(key)) || {
             header: 'Content-Security-Policy-Report-Only',
             operation: 'remove',
           },
-          {
-            header: 'Access-Control-Allow-Origin',
-            value: '*',
-            operation: 'set',
-          },
         ],
       },
       condition: {
@@ -183,12 +178,8 @@ async function fetchAsync({ accept, src }) {
   const { port, path } = state;
   const url = `${new URL(src, `http://localhost:${port}${path}`)}`;
   try {
-    const response = await chrome.runtime.sendMessage({ action: 'fetch', accept, url });
-    if (response?.error) {
-      console.error(url, response?.error);
-      return null;
-    }
-    return response;
+    const response = await fetch(url, { headers: { Accept: accept || '*/*' } });
+    return await response.text();
   } catch (error) {
     console.error(url, error);
     return null;
