@@ -21,7 +21,7 @@
           new Promise((resolve, reject) => {
             script.addEventListener('load', resolve);
             script.addEventListener('error', reject);
-          })
+          }),
         );
       }
       console.info(script.outerHTML);

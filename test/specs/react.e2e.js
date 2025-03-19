@@ -52,7 +52,7 @@ describe('Web Mask on react', () => {
       async () => {
         return (await browser.execute(() => document.title)) === 'Web Mask is on!';
       },
-      { timeout: 10000 }
+      { timeout: 10000 },
     );
   });
 });

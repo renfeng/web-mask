@@ -40,6 +40,7 @@ bin/test.sh
 bin/kill-angular.sh
 
 bin/kill-vuejs.sh
+
 </td>
   </tr>
 </table>
