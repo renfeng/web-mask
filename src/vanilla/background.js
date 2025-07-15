@@ -13,9 +13,6 @@ function onMessage(message, sender, sendResponse) {
   const { action, ...data } = message;
   if (['ping', 'set-state'].includes(action)) {
     forwardMessageAsync(tabId, message, sendResponse);
-  } else if (action === 'fetch') {
-    const { accept, url } = data;
-    fetchAsync({ accept, url }, sendResponse);
   } else if (action === 'has-rules') {
     const { rules } = data;
     hasRulesAsync(tabId, rules, sendResponse);
@@ -33,20 +30,6 @@ async function forwardMessageAsync(tabId, message, sendResponse) {
   try {
     const response = await chrome.tabs.sendMessage(tabId, message);
     sendResponse(response);
-  } catch (error) {
-    const { message, stack } = error;
-    sendResponse({ error: { message, stack } });
-  }
-}
-
-async function fetchAsync({ accept, url }, sendResponse) {
-  try {
-    const response = await fetch(url, { headers: { Accept: accept || '*/*' } });
-    if (response.status >= 400) {
-      sendResponse({ error: { message: response.statusText } });
-    }
-    const content = await response.text();
-    sendResponse(content);
   } catch (error) {
     const { message, stack } = error;
     sendResponse({ error: { message, stack } });
