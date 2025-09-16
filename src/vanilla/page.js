@@ -28,7 +28,11 @@
         );
       }
       console.info(script.outerHTML);
-      node.parentNode.replaceChild(script, node);
+      try {
+        node.parentNode.replaceChild(script, node);
+      } catch (error) {
+        console.error(error);
+      }
     } else {
       for (const child of node.childNodes) {
         activateScript(child, exclude, scriptPromises);
