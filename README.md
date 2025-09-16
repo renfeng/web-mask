@@ -1,23 +1,17 @@
 # Web Mask Chrome Extension
 
-See also [chrome-web-store/README.md](chrome-web-store/README.md)
-
-## Build
-
-```shell
-bin/build.sh
-```
-
 ## Install and run
 
-1. Follow the instruction printed by the command line above.
-2. Open a tab, click on the extension icon once to request access.
-3. Click on the extension icon again to open a popup.
-4. Choose local port and context path, and click on enable button.
+1. Open in Chrome, [chrome://extensions](chrome://extensions)
+2. Enable "Developer mode"
+3. Load unpacked, and browse to the directory of `src/vanilla`
+4. Open a tab, click on the extension icon once to request access.
+5Click on the extension icon again to open a popup.
+6Choose local port and context path, and click on enable button.
 
 ## Uninstall or disable
 
-When done you can uninstall the plugin, or disable it under `chrome://extensions`
+When done you can uninstall the plugin, or disable it under [chrome://extensions](chrome://extensions)
 
 ## Test automation samples
 
@@ -56,3 +50,15 @@ See also
 Enable the option, DevTools >> Application >> Service Workers >> Bypass for network
 
 Ref. https://crbug.com/1012977
+
+## Upload to Chrome Webstore
+
+Build the zip file
+
+```
+./bin/release.sh
+```
+
+https://chrome.google.com/webstore/devconsole/
+
+See also [chrome-web-store/README.md](chrome-web-store/README.md)

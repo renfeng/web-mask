@@ -1,46 +1,58 @@
 chrome.runtime.onMessage.addListener(onMessage);
 
 const observer = new MutationObserver((mutationList, observer) => {
-  console.debug('Mutation', mutationList, observer);
+  console.debug("Mutation", mutationList, observer);
   debounce();
 });
-observer.observe(document.body, { attributes: true, childList: true, subtree: true });
+observer.observe(document.body, {
+  attributes: true,
+  childList: true,
+  subtree: true,
+});
 
 const key = location.origin;
 const state = JSON.parse(sessionStorage.getItem(key)) || {
   port: 0,
-  path: '/',
+  path: "/",
   enabled: false,
   rules: [
     {
       action: {
-        type: 'redirect',
+        type: "redirect",
         redirect: {
-          transform: { scheme: 'http', host: 'localhost', port: '0' },
+          transform: { scheme: "http", host: "localhost", port: "0" },
         },
       },
       condition: {
         regexFilter: `^${location.origin}/.*`,
-        resourceTypes: ['script', 'stylesheet', 'image', 'font'],
+        resourceTypes: ["script", "stylesheet", "image", "font"],
       },
     },
     {
       action: {
-        type: 'modifyHeaders',
+        type: "modifyHeaders",
         responseHeaders: [
           {
-            header: 'Content-Security-Policy',
-            operation: 'remove',
+            header: "Content-Security-Policy",
+            operation: "remove",
           },
           {
-            header: 'Content-Security-Policy-Report-Only',
-            operation: 'remove',
+            header: "Content-Security-Policy-Report-Only",
+            operation: "remove",
           },
+<<<<<<< HEAD
+=======
+          {
+            header: "Access-Control-Allow-Origin",
+            value: "*",
+            operation: "set",
+          },
+>>>>>>> 6fbfb41 (prettier)
         ],
       },
       condition: {
         regexFilter: `^${location.origin}/.*`,
-        resourceTypes: ['main_frame', 'sub_frame'],
+        resourceTypes: ["main_frame", "sub_frame"],
       },
     },
   ],
@@ -52,7 +64,10 @@ let javascriptInjection = false;
 
 (async () => {
   const { enabled, rules } = state;
-  const hasRules = await chrome.runtime.sendMessage({ action: 'has-rules', rules });
+  const hasRules = await chrome.runtime.sendMessage({
+    action: "has-rules",
+    rules,
+  });
   if (hasRules) {
     if (enabled) {
       await loadHTMLAsync();
@@ -77,36 +92,38 @@ function debounce() {
   clearTimeout(timeout);
   timeout = setTimeout(() => {
     if (Object.keys(requests).length > 0) {
-      console.log('Pending on requests...', requests);
+      console.log("Pending on requests...", requests);
       debounce();
       return;
     }
     if (javascriptInjection) {
-      console.log('Pending on javascript...');
+      console.log("Pending on javascript...");
       debounce();
       return;
     }
-    console.log('ready', new Date().toISOString(), document.title);
-    window.postMessage({ action: 'ready', key }, location.origin);
+    console.log("ready", new Date().toISOString(), document.title);
+    window.postMessage({ action: "ready", key }, location.origin);
   }, 100);
 }
 
 function onMessage(message, sender, sendResponse) {
-  console.debug(`message received: ${JSON.stringify(message, null, 2)}, ${JSON.stringify(sender)}`);
+  console.debug(
+    `message received: ${JSON.stringify(message, null, 2)}, ${JSON.stringify(sender)}`,
+  );
   const { action, ...data } = message;
   try {
-    if (action === 'ping') {
+    if (action === "ping") {
       sendResponse(state);
-    } else if (action === 'set-state') {
+    } else if (action === "set-state") {
       const { port, path, enabled } = data;
       setState(port, path, enabled);
       sendResponse();
-    } else if (action === 'add-request') {
+    } else if (action === "add-request") {
       const { requestId } = data;
       requests[requestId] = data;
       debounce();
       sendResponse();
-    } else if (action === 'remove-request') {
+    } else if (action === "remove-request") {
       const { requestId } = data;
       delete requests[requestId];
       debounce();
@@ -132,7 +149,7 @@ function setState(port, path, enabled) {
 
 async function loadHTMLAsync() {
   const src = location.pathname;
-  const accept = 'text/html';
+  const accept = "text/html";
   const response = await fetchAsync({ accept, src });
   if (response) {
     await filterHTMLAsync(response);
@@ -140,45 +157,49 @@ async function loadHTMLAsync() {
 }
 
 async function injectPageScriptAsync() {
-  const script = document.createElement('script');
+  const script = document.createElement("script");
   const promise = new Promise((resolve, reject) => {
-    script.addEventListener('load', resolve);
-    script.addEventListener('error', reject);
+    script.addEventListener("load", resolve);
+    script.addEventListener("error", reject);
   });
-  script.setAttribute('type', 'text/javascript');
-  script.setAttribute('src', chrome.runtime.getURL('page.js'));
+  script.setAttribute("type", "text/javascript");
+  script.setAttribute("src", chrome.runtime.getURL("page.js"));
   document.head.appendChild(script);
   return promise;
 }
 
 async function filterHTMLAsync(html) {
-  const headMatch = html.match(/(?<=<head(?<attributes>(?:\s+\S+="[^"]+")*)>).*(?=<[/]head>)/s);
-  const bodyMatch = html.match(/(?<=<body(?<attributes>(?:\s+\S+="[^"]+")*)>).*(?=<[/]body>)/s);
+  const headMatch = html.match(
+    /(?<=<head(?<attributes>(?:\s+\S+="[^"]+")*)>).*(?=<\/head>)/s,
+  );
+  const bodyMatch = html.match(
+    /(?<=<body(?<attributes>(?:\s+\S+="[^"]+")*)>).*(?=<\/body>)/s,
+  );
 
   document.head.innerHTML = headMatch[0];
   document.body.innerHTML = bodyMatch[0];
 
   const event = await injectPageScriptAsync();
 
-  await activateScriptAsync(event.target.src);
+  await activateScriptAsync({ exclude: event.target.src });
 }
 
-async function activateScriptAsync(exclude) {
+async function activateScriptAsync({ exclude }) {
   javascriptInjection = true;
-  window.addEventListener('message', (event) => {
-    console.debug('message received', event.data);
-    if (event.data.action === 'complete-javascript-injection') {
+  window.addEventListener("message", (event) => {
+    console.debug("message received", event.data);
+    if (event.data.action === "complete-javascript-injection") {
       javascriptInjection = false;
     }
   });
-  window.postMessage({ action: 'activate-script', exclude }, location.origin);
+  window.postMessage({ action: "activate-script", exclude }, location.origin);
 }
 
 async function fetchAsync({ accept, src }) {
   const { port, path } = state;
   const url = `${new URL(src, `http://localhost:${port}${path}`)}`;
   try {
-    const response = await fetch(url, { headers: { Accept: accept || '*/*' } });
+    const response = await fetch(url, { headers: { Accept: accept || "*/*" } });
     return await response.text();
   } catch (error) {
     console.error(url, error);
@@ -187,7 +208,10 @@ async function fetchAsync({ accept, src }) {
 }
 
 async function addRulesAsync() {
-  const rules = await chrome.runtime.sendMessage({ action: 'add-rules', rules: state.rules });
+  const rules = await chrome.runtime.sendMessage({
+    action: "add-rules",
+    rules: state.rules,
+  });
   Object.assign(state, { rules });
   sessionStorage.setItem(key, JSON.stringify(state));
   location.reload();
@@ -195,6 +219,6 @@ async function addRulesAsync() {
 
 async function removeRulesAsync() {
   const { rules } = state;
-  await chrome.runtime.sendMessage({ action: 'remove-rules', rules });
+  await chrome.runtime.sendMessage({ action: "remove-rules", rules });
   location.reload();
 }
