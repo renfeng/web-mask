@@ -42,7 +42,7 @@ English (United Kingdom)
 
 ## Store icon
 
-![Angular logo 128x128](../src/vanilla/icon128.png)
+![Angular logo 128x128](../chrome-extension/icon128.png)
 
 ## Screenshots
 

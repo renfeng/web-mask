@@ -4,7 +4,7 @@
 
 1. Open in Chrome, [chrome://extensions](chrome://extensions)
 2. Enable "Developer mode"
-3. Load unpacked, and browse to the directory of `src/vanilla`
+3. Load unpacked, and browse to the directory of `chrome-extension`
 4. Open a tab, click on the extension icon once to request access.
 5. Click on the extension icon again to open a popup.
 6. Choose local port and context path, and click on enable button.
